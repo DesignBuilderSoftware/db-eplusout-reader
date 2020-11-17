@@ -2,7 +2,7 @@
 name = "db-esofile-reader"
 version = "0.1.0"
 description = ""
-authors = ["voightp <vojtech,panek@designbuilder.co.uk>"]
+authors = ["Vojtech Panek <vojtech.panek@designbuilder.co.uk>"]
 
 [tool.poetry.dependencies]
 python = "^2.7"
