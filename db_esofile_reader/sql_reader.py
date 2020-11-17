@@ -166,12 +166,15 @@ def parse_sql_timestamp(time_row):
     """ Convert EnerguPlus timestamp to standard datetime. """
     interval, year, month, day, hour, minute = time_row
     year = 2002 if (year == 0 or year is None) else year
-    if interval > 1:
-        # let day, month, annual and runperiod timestamp to be set at step beginning
-        hour = 0
-        minute = 0
-        if interval in {3, 4, 5}:
-            day = 1
+
+    # some fields may be none, 0 or 24 which is not compatible with datetime format
+    if interval == 2:
+        hour, minute = 0, 0
+    elif interval == 3:
+        day, hour, minute = 1, 0, 0
+    elif interval in {4, 5}:
+        month, day, hour, minute = 1, 1, 0, 0
+
     if hour == 24:
         # Convert last step of day
         shifted_datetime = datetime(year, month, day, hour - 1)

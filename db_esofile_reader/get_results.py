@@ -35,15 +35,15 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
          Variable("runperiod", "", "Electricity:Facility", "J"), # standard meter
          Variable("runperiod", "Cumulative", "Electricity:Facility", "J"), # cumulative meter
          Variable("runperiod", None, None, None), # get all runperiod outputs
-         Variable("hourly", "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model", ""),
-         Variable("hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model", "")
+         Variable("hourly", "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
+         Variable("hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
     ]
 
     # get results for variables fully matching data dictionary values
     # the last variable won't be found, start and end date slicing is not applied
 
     results = get_results(
-        path=r"C:\some\path\eplusout.sql",
+        r"C:\some\path\eplusout.sql",
         variables=variables,
         alike=False
     )
@@ -52,7 +52,7 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
     # the last variable will be found, only 'May' data will be included
 
     results = get_results(
-        path=r"C:\some\path\eplusout.sql",
+        r"C:\some\path\eplusout.sql",
         variables=variables,
         alike=False,
         start_date=datetime(2002, 5, 1, 0),

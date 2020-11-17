@@ -44,6 +44,17 @@ class TestSql(unittest.TestCase):
         results = get_results(SQL_PATH, variable, alike=True)
         self.assertEqual(140, len(results.keys()))
 
+    def test_get_all_sliced_results(self):
+        variable = Variable(None, None, None, None)
+        results = get_results(
+            SQL_PATH,
+            variable,
+            alike=True,
+            start_date=datetime(2013, 1, 1),
+            end_date=datetime(2013, 2, 1)
+        )
+        self.assertEqual(140, len(results.keys()))
+
     def test_get_results_start_end_dates(self):
         variable = Variable(
             H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PPD", "%"
