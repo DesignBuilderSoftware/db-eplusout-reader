@@ -18,7 +18,7 @@
 When one (or multiple) 'Variable' fields would be set as None,
 filtering for specific part of variable will not be applied.
 
-Variable(None, None, None, None) returns all outputs
+Variable(None, None, None, None) returns all outputs.
 Variable("hourly", None, None, None) returns all 'hourly' outputs.
 
 Note that frequency constants {TS, H, D, M, A, RP} can be imported
