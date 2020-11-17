@@ -1,0 +1,6 @@
+TS = "timestep"
+H = "hourly"
+D = "daily"
+M = "monthly"
+A = "annual"
+RP = "runperiod"
