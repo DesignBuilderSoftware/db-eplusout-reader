@@ -1,8 +1,6 @@
 # db-esofile-reader
 ## A package to read results from EnergyPlus output files.
 
-'get_results' is the main method to get results from given file.
-
 'Variable' is a named tuple to define expected output variables.
 
     v = Variable(
@@ -11,6 +9,11 @@
         type="Zone Thermal Comfort Fanger Model",
         units=None
     )
+
+'get_results' is the main method to get results from given file.
+
+    results = get_results(r"C:\some\path\eplusout.sql", variables=v)
+
 
 When one (or multiple) 'Variable' fields would be set as None,
 filtering for specific part of variable will not be applied.
