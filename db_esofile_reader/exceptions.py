@@ -32,3 +32,9 @@ class StartDayMismatch(Exception):
     """ Exception raised when start day for given year does not match real calendar. """
 
     pass
+
+
+class NoResults(Exception):
+    """ Exception raised when numeric outputs are requsted in empty results dictionary. """
+
+    pass

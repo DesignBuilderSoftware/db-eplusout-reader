@@ -13,6 +13,16 @@
 'get_results' is the main method to get results from given file.
 
     results = get_results(r"C:\some\path\eplusout.sql", variables=v)
+    
+returned values is a ResultsDictionary dict like class with some
+handy properties to easily get numeric and variable data.
+
+    results.sorted_items
+    results.scalar
+    results.first_array
+    results.first_variable
+    results.variables
+    results.arrays
 
 
 When one (or multiple) 'Variable' fields would be set as None,

@@ -3,7 +3,7 @@ from datetime import timedelta, datetime
 
 from db_esofile_reader import Variable
 from db_esofile_reader.constants import *
-
+from db_esofile_reader.resutls_dict import ResultsDictionary
 DATA_TABLE = "ReportData"
 DATA_DICT_TABLE = "ReportDataDictionary"
 TIME_TABLE = "Time"
@@ -226,17 +226,17 @@ def get_results_from_sql(path, variables, alike=False, start_date=None, end_date
 
     Returns
     -------
-    dict of {Variable, list of float}
+    ResultsDictionary : Dict of {Variable, list of float}
 
     """
     conn = sqlite3.connect(path)
     variables = [variables] if isinstance(variables, Variable) else variables
     ids_dict = get_ids_dict(conn, variables, alike)
-    outputs = {}
+    rd = ResultsDictionary()
     for id_, variable in ids_dict.items():
         if start_date or end_date:
-            outputs[variable] = get_sliced_outputs(conn, id_, start_date, end_date)
+            rd[variable] = get_sliced_outputs(conn, id_, start_date, end_date)
         else:
-            outputs[variable] = get_outputs(conn, id_)
+            rd[variable] = get_outputs(conn, id_)
     conn.close()
-    return outputs
+    return rd

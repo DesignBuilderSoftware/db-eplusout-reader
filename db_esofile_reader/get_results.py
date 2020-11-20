@@ -74,6 +74,11 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
     end_date : default None, datetime.datetime
         Upper datetime interval boundary, inclusive.
 
+    Returns
+    -------
+    ResultsDictionary : Dict of {Variable, list of float}
+        A dictionary like class with some properties to easily extract output values.
+
     """
     if isinstance(file_or_path, str):
         _, ext = os.path.splitext(file_or_path)
