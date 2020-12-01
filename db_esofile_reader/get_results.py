@@ -91,7 +91,7 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
         else:
             raise TypeError("Unsupported file type '{}' provided!".format(ext))
     else:
-        if isinstance(file, (DBEsoFile, DBEsoFileCollection)):
+        if isinstance(file_or_path, (DBEsoFile, DBEsoFileCollection)):
             raise NotImplemented("Sorry, this has not been implemented yet.")
         else:
             raise TypeError(
