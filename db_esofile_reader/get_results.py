@@ -94,5 +94,7 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
         if isinstance(file, (DBEsoFile, DBEsoFileCollection)):
             raise NotImplemented("Sorry, this has not been implemented yet.")
         else:
-            raise TypeError("Unsupported class '{}' provided!".format(type(file).__name__))
+            raise TypeError(
+                "Unsupported class '{}' provided!".format(type(file_or_path).__name__)
+            )
     return results
