@@ -32,7 +32,7 @@ class ResultsDictionary(OrderedDict):
     @property
     def _items(self):
         if self:
-            return self.items()
+            return list(self.items())
         else:
             raise NoResults("Cannot get items, Results dictionary is empty. ")
 
