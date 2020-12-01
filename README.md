@@ -9,6 +9,13 @@
         type="Zone Thermal Comfort Fanger Model PMV",
         units=""
     )
+   
+When one (or multiple) 'Variable' fields would be set as None,
+filtering for specific part of variable will not be applied.
+
+Variable(None, None, None, None) returns all outputs.
+Variable("hourly", None, None, None) returns all 'hourly' outputs.
+
 
 'get_results' works as the main method to get results from given file.
 
@@ -17,19 +24,11 @@
 It returns a ResultsDictionary dict like class with some
 handy properties to easily get numeric and variable data.
 
-    results.sorted_items
     results.scalar
     results.first_array
     results.first_variable
     results.variables
     results.arrays
-
-
-When one (or multiple) 'Variable' fields would be set as None,
-filtering for specific part of variable will not be applied.
-
-Variable(None, None, None, None) returns all outputs.
-Variable("hourly", None, None, None) returns all 'hourly' outputs.
 
 ResultsDictionary is a subclass of OrderedDict - variables are returned in a 
 requested order. If a single requested variable returns multiple variables 
