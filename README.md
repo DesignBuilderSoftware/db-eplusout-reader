@@ -1,4 +1,4 @@
-# db-esofile-reader
+# db-esofile-reader ![Tests](https://github.com/DesignBuilderSoftware/db-esofile-reader/workflows/Tests/badge.svg)
 ## A package to read results from EnergyPlus output files.
 
 'Variable' is a named tuple to define expected output variables.
