@@ -6,8 +6,13 @@ name: Tests
 on:
   push:
     branches: [ main ]
+    paths-ignore: 
+    - README.MD
+    - pyproject.toml
+
   pull_request:
     branches: [ main ]
+
 
 jobs:
   build:
