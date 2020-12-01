@@ -1,7 +1,9 @@
+from collections import OrderedDict
+
 from db_esofile_reader.exceptions import NoResults
 
 
-class ResultsDictionary(dict):
+class ResultsDictionary(OrderedDict):
     """
     A dictionary like class with enhanced functionality to easily extract output arrays.
 
@@ -28,31 +30,31 @@ class ResultsDictionary(dict):
     """
 
     @property
-    def sorted_items(self):
+    def _items(self):
         if self:
-            return [(k, self[k]) for k in sorted(self.keys())]
+            return self.items()
         else:
-            raise NoResults("Cannot get sorted items, Results dictionary is empty. ")
+            raise NoResults("Cannot get items, Results dictionary is empty. ")
 
     @property
     def scalar(self):
         try:
-            return self.sorted_items[0][1][0]
+            return self._items[0][1][0]
         except IndexError:
             raise NoResults("Cannot get scalar value, first array is empty!")
 
     @property
     def first_array(self):
-        return self.sorted_items[0][1]
+        return self._items[0][1]
 
     @property
     def first_variable(self):
-        return self.sorted_items[0][0]
+        return self._items[0][0]
 
     @property
     def variables(self):
-        return [v[0] for v in self.sorted_items]
+        return [v[0] for v in self._items]
 
     @property
     def arrays(self):
-        return [v[1] for v in self.sorted_items]
+        return [v[1] for v in self._items]

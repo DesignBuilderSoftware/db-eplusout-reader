@@ -34,7 +34,7 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
     variables = [
          Variable("runperiod", "", "Electricity:Facility", "J"), # standard meter
          Variable("runperiod", "Cumulative", "Electricity:Facility", "J"), # cumulative meter
-         Variable("runperiod", None, None, None), # get all runperiod outputs
+         Variable("daily", None, None, None), # get all daily outputs
          Variable("hourly", "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
          Variable("hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
     ]
