@@ -10,11 +10,11 @@
         units=""
     )
 
-'get_results' is the main method to get results from given file.
+'get_results' works as the main method to get results from given file.
 
     results = get_results(r"C:\some\path\eplusout.sql", variables=v)
     
-returned values is a ResultsDictionary dict like class with some
+It returns a ResultsDictionary dict like class with some
 handy properties to easily get numeric and variable data.
 
     results.sorted_items
@@ -31,6 +31,10 @@ filtering for specific part of variable will not be applied.
 Variable(None, None, None, None) returns all outputs.
 Variable("hourly", None, None, None) returns all 'hourly' outputs.
 
+ResultsDictionary is a subclass of OrderedDict - variables are returned in a 
+requested order. If a single requested variable returns multiple variables 
+(either using 'None' fields or 'alike') this 'sequence' is ordered alphabetically.
+
 Frequency constants {TS, H, D, M, A, RP} can be imported
 from db_esofile_reader.constants.
 
@@ -44,7 +48,7 @@ from datetime import datetime
 variables = [
      Variable(RP, "", "Electricity:Facility", "J"), # standard meter
      Variable(RP, "Cumulative", "Electricity:Facility", "J"), # cumulative meter
-     Variable(RP, None, None, None), # get all runperiod outputs
+     Variable(D, None, None, None), # get all daily outputs
      Variable(H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
      Variable(H, "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
 ]

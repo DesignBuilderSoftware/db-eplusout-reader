@@ -1,9 +1,11 @@
 import sqlite3
+from collections import OrderedDict
 from datetime import timedelta, datetime
 
 from db_esofile_reader import Variable
 from db_esofile_reader.constants import *
 from db_esofile_reader.resutls_dict import ResultsDictionary
+
 DATA_TABLE = "ReportData"
 DATA_DICT_TABLE = "ReportDataDictionary"
 TIME_TABLE = "Time"
@@ -87,15 +89,31 @@ def to_string(unicode_variable):
     return Variable(*map(lambda x: str(x), unicode_variable))
 
 
+def get_unsorted_sub_dict(rows):
+    unsorted_dict = {}
+    for id_, frequency, key, type_, units in rows:
+        unicode_variable = Variable(to_eso_frequency(frequency), key, type_, units)
+        variable = to_string(unicode_variable)
+        unsorted_dict[id_] = variable
+    return unsorted_dict
+
+
+def sort_by_value(unsorted_dict):
+    sorted_dct = OrderedDict()
+    sorted_items = [item for item in sorted(unsorted_dict.items(), key=lambda x: x[1])]
+    for k, v in sorted_items:
+        sorted_dct[k] = v
+    return sorted_dct
+
+
 def get_ids_dict(conn, variables, alike):
     """ Find id : Variable pairs for given 'Variable' request. """
-    ids_dict = {}
+    all_ids_dict = OrderedDict()
     for variable in variables:
         rows = fetch_data_dict_rows(conn, variable, alike)
-        for id_, frequency, key, type_, units in rows:
-            unicode_variable = Variable(to_eso_frequency(frequency), key, type_, units)
-            ids_dict[id_] = to_string(unicode_variable)
-    return ids_dict
+        ids_dict = get_unsorted_sub_dict(rows)
+        all_ids_dict.update(sort_by_value(ids_dict))
+    return all_ids_dict
 
 
 def create_placeholders(id_, start_date, end_date):

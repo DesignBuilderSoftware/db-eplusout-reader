@@ -24,7 +24,7 @@ class TestSql(unittest.TestCase):
             Variable(D, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
         ]
         results = get_results(SQL_PATH, variables)
-        self.assertSetEqual(set(results.keys()), set(variables))
+        self.assertListEqual(list(results.keys()), variables)
         self.assertTrue(all(map(lambda x: len(x) == 365, results.values())))
 
     def test_get_results_alike(self):
@@ -32,13 +32,13 @@ class TestSql(unittest.TestCase):
             "hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model", ""
         )
         results = get_results(SQL_PATH, variable, alike=True)
-        expected = {
-            Variable(H, 'PEOPLE BLOCK1:ZONE1', u'Zone Thermal Comfort Fanger Model PMV', ''),
-            Variable(H, 'PEOPLE BLOCK1:ZONE1', u'Zone Thermal Comfort Fanger Model PPD', '%'),
-            Variable(H, 'PEOPLE BLOCK1:ZONE2', u'Zone Thermal Comfort Fanger Model PPD', '%'),
-            Variable(H, 'PEOPLE BLOCK1:ZONE2', u'Zone Thermal Comfort Fanger Model PMV', '')
-        }
-        self.assertSetEqual(expected, set(results.keys()))
+        expected = [
+            Variable(H, 'PEOPLE BLOCK1:ZONE1', 'Zone Thermal Comfort Fanger Model PMV', ''),
+            Variable(H, 'PEOPLE BLOCK1:ZONE1', 'Zone Thermal Comfort Fanger Model PPD', '%'),
+            Variable(H, 'PEOPLE BLOCK1:ZONE2', 'Zone Thermal Comfort Fanger Model PMV', ''),
+            Variable(H, 'PEOPLE BLOCK1:ZONE2', 'Zone Thermal Comfort Fanger Model PPD', '%'),
+        ]
+        self.assertListEqual(expected, list(results.keys()))
 
     def test_get_all_results(self):
         variable = Variable(None, None, None, None)
