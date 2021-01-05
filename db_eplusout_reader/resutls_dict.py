@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from db_esofile_reader.exceptions import NoResults
+from db_eplusout_reader.exceptions import NoResults
 
 
 class ResultsDictionary(OrderedDict):

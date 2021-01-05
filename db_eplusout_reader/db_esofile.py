@@ -1,7 +1,7 @@
-from db_esofile_reader.constants import *
-from db_esofile_reader.exceptions import CollectionRequired
-from db_esofile_reader.processing.esofile_reader import process_eso_file
-from db_esofile_reader.processing.esofile_time import convert_raw_date_data, \
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.exceptions import CollectionRequired
+from db_eplusout_reader.processing.esofile_reader import process_eso_file
+from db_eplusout_reader.processing.esofile_time import convert_raw_date_data, \
     get_n_days_from_cumulative
 
 

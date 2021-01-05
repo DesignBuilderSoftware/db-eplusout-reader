@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-from db_esofile_reader import Variable
-from db_esofile_reader.constants import *
-from db_esofile_reader.resutls_dict import ResultsDictionary, NoResults
+from db_eplusout_reader import Variable
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.resutls_dict import ResultsDictionary, NoResults
 
 
 class TestResultsDictionary(TestCase):

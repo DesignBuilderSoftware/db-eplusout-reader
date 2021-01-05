@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from db_esofile_reader.constants import *
+from db_eplusout_reader.constants import *
 
 
 class RawOutputData:

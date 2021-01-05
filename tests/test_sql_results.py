@@ -2,9 +2,9 @@ import os
 import unittest
 from datetime import datetime
 
-from db_esofile_reader import Variable, get_results
-from db_esofile_reader.constants import *
-from db_esofile_reader.sql_reader import get_timestamps_from_sql
+from db_eplusout_reader import Variable, get_results
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.sql_reader import get_timestamps_from_sql
 
 SQL_PATH = os.path.join(os.path.dirname(__file__), "test_files", "eplusout.sql")
 
