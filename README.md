@@ -35,7 +35,7 @@ requested order. If a single requested variable returns multiple variables
 (either using 'None' fields or 'alike') this 'sequence' is ordered alphabetically.
 
 Frequency constants {TS, H, D, M, A, RP} can be imported
-from db_esofile_reader.constants.
+from db_eplusout_reader.constants.
 
 Examples
 --------
