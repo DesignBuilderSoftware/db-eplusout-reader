@@ -2,9 +2,9 @@ import sqlite3
 from collections import OrderedDict
 from datetime import timedelta, datetime
 
-from db_esofile_reader import Variable
-from db_esofile_reader.constants import *
-from db_esofile_reader.resutls_dict import ResultsDictionary
+from db_eplusout_reader import Variable
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.resutls_dict import ResultsDictionary
 
 DATA_TABLE = "ReportData"
 DATA_DICT_TABLE = "ReportDataDictionary"

@@ -3,10 +3,10 @@ from collections import defaultdict, namedtuple
 from datetime import datetime
 from functools import partial
 
-from db_esofile_reader.constants import *
-from db_esofile_reader.exceptions import BlankLineError, InvalidLineSyntax, IncompleteFile
-from db_esofile_reader.processing.esofile_time import EsoTimestamp
-from db_esofile_reader.processing.raw_eso_data import RawOutputData
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.exceptions import BlankLineError, InvalidLineSyntax, IncompleteFile
+from db_eplusout_reader.processing.esofile_time import EsoTimestamp
+from db_eplusout_reader.processing.raw_eso_data import RawOutputData
 
 ENVIRONMENT_LINE = 1
 TIMESTEP_OR_HOURLY_LINE = 2

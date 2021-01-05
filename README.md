@@ -1,4 +1,4 @@
-# db-esofile-reader ![Tests](https://github.com/DesignBuilderSoftware/db-esofile-reader/workflows/Tests/badge.svg)
+# db-eplusout-reader ![Tests](https://github.com/DesignBuilderSoftware/db-esofile-reader/workflows/Tests/badge.svg)
 ## A package to read results from EnergyPlus output files.
 
 'Variable' is a named tuple to define expected output variables.
@@ -39,17 +39,18 @@ from db_esofile_reader.constants.
 
 Examples
 --------
+
 ```Python
-from db_esofile_reader import Variable, get_results
-from db_esofile_reader.constants import *
+from db_eplusout_reader import Variable, get_results
+from db_eplusout_reader.constants import *
 from datetime import datetime
 
 variables = [
-     Variable(RP, "", "Electricity:Facility", "J"), # standard meter
-     Variable(RP, "Cumulative", "Electricity:Facility", "J"), # cumulative meter
-     Variable(D, None, None, None), # get all daily outputs
-     Variable(H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
-     Variable(H, "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
+    Variable(RP, "", "Electricity:Facility", "J"),  # standard meter
+    Variable(RP, "Cumulative", "Electricity:Facility", "J"),  # cumulative meter
+    Variable(D, None, None, None),  # get all daily outputs
+    Variable(H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
+    Variable(H, "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
 ]
 
 # get results for variables fully matching data dictionary values

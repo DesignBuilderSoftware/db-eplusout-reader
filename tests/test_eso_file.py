@@ -1,8 +1,8 @@
 import os
 import unittest
 
-from db_esofile_reader import DBEsoFile, DBEsoFileCollection
-from db_esofile_reader.constants import *
+from db_eplusout_reader import DBEsoFile, DBEsoFileCollection
+from db_eplusout_reader.constants import *
 
 ESO_PATH = os.path.join(os.path.dirname(__file__), "test_files", "eplusout.eso")
 

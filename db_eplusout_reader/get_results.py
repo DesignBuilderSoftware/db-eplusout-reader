@@ -1,7 +1,7 @@
 import os
 
-from db_esofile_reader.db_esofile import DBEsoFile, DBEsoFileCollection
-from db_esofile_reader.sql_reader import get_results_from_sql
+from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
+from db_eplusout_reader.sql_reader import get_results_from_sql
 
 
 def get_results(file_or_path, variables, alike=False, start_date=None, end_date=None):

@@ -3,8 +3,8 @@ import logging
 from collections import namedtuple
 from datetime import datetime, timedelta
 
-from db_esofile_reader.constants import *
-from db_esofile_reader.exceptions import LeapYearMismatch, StartDayMismatch
+from db_eplusout_reader.constants import *
+from db_eplusout_reader.exceptions import LeapYearMismatch, StartDayMismatch
 
 EsoTimestamp = namedtuple("EsoTimestamp", "month day hour end_minute")
 
