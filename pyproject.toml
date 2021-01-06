@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "db-esofile-reader"
+name = "db-eplusout-reader"
 version = "0.2.0"
 description = ""
 authors = ["Vojtech Panek <vojtech.panek@designbuilder.co.uk>"]
