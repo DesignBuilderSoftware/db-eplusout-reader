@@ -4,7 +4,7 @@ from datetime import timedelta, datetime
 
 from db_eplusout_reader import Variable
 from db_eplusout_reader.constants import *
-from db_eplusout_reader.resutls_dict import ResultsDictionary
+from db_eplusout_reader.results_dict import ResultsDictionary
 
 DATA_TABLE = "ReportData"
 DATA_DICT_TABLE = "ReportDataDictionary"
