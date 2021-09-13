@@ -1,20 +1,14 @@
-from db_eplusout_reader.constants import *
+from db_eplusout_reader.constants import A, D, H, M, RP, TS
 from db_eplusout_reader.exceptions import CollectionRequired
 from db_eplusout_reader.processing.esofile_reader import process_eso_file
-from db_eplusout_reader.processing.esofile_time import convert_raw_date_data, \
-    get_n_days_from_cumulative
+from db_eplusout_reader.processing.esofile_time import (
+    convert_raw_date_data,
+    get_n_days_from_cumulative,
+)
 
 
 class DBEsoFile:
-    def __init__(
-        self,
-        environment_name,
-        header,
-        outputs,
-        dates,
-        n_days,
-        days_of_week
-    ):
+    def __init__(self, environment_name, header, outputs, dates, n_days, days_of_week):
         """
         Represents processed EnergyPlus eso file output data.
 
@@ -104,7 +98,7 @@ class DBEsoFile:
             outputs=raw_outputs.outputs,
             dates=dates,
             n_days=n_days,
-            days_of_week=raw_outputs.days_of_week
+            days_of_week=raw_outputs.days_of_week,
         )
 
     @classmethod
@@ -112,13 +106,13 @@ class DBEsoFile:
         all_raw_outputs = process_eso_file(file_path)
         if len(all_raw_outputs) == 1:
             return cls._from_raw_outputs(all_raw_outputs[0], year)
-        else:
-            raise CollectionRequired(
-                "Cannot process file {}. "
-                "as there are multiple environments included.\n"
-                "Use 'DBEsoFileCollection.from_path' "
-                "to generate multiple files.""".format(file_path)
-            )
+        raise CollectionRequired(
+            "Cannot process file {}. "
+            "as there are multiple environments included.\n"
+            "Use 'DBEsoFileCollection.from_path' "
+            "to generate multiple files."
+            "".format(file_path)
+        )
 
     @property
     def frequencies(self):

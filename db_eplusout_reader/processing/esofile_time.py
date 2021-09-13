@@ -3,7 +3,7 @@ import logging
 from collections import namedtuple
 from datetime import datetime, timedelta
 
-from db_eplusout_reader.constants import *
+from db_eplusout_reader.constants import A, D, H, M, RP, TS
 from db_eplusout_reader.exceptions import LeapYearMismatch, StartDayMismatch
 
 EsoTimestamp = namedtuple("EsoTimestamp", "month day hour end_minute")
@@ -54,13 +54,13 @@ def get_month_n_days_from_cumulative(monthly_cumulative_days):
 
 
 def find_num_of_days_annual(ann_num_of_days, rp_num_of_days):
-    """ Use runperiod data to calculate number of days for each annual period. """
+    """Use runperiod data to calculate number of days for each annual period."""
     days = rp_num_of_days[0] // len(ann_num_of_days)
     return [days for _ in ann_num_of_days]
 
 
 def get_num_of_days(cumulative_days):
-    """ Split num of days and date. """
+    """Split num of days and date."""
     num_of_days = {}
     for table, values in cumulative_days.items():
         if table == M:
@@ -76,19 +76,15 @@ def get_num_of_days(cumulative_days):
 
 
 def check_year_increment(first_step_data, current_step_data):
-    """ Check if year value should be incremented inside environment table. """
+    """Check if year value should be incremented inside environment table."""
     if first_step_data is current_step_data:
         # do not increment first step
         return False
-    elif first_step_data >= current_step_data:
-        # duplicate date -> increment year
-        return True
-    else:
-        return False
+    return first_step_data >= current_step_data
 
 
 def generate_datetime_dates(raw_dates, year):
-    """ Generate datetime index for a given period. """
+    """Generate datetime index for a given period."""
     dates = []
     for i in range(0, len(raw_dates)):
         # based on the first, current and previous
@@ -102,7 +98,7 @@ def generate_datetime_dates(raw_dates, year):
 
 
 def update_start_dates(dates):
-    """ Set accurate first date for monthly+ tables. """
+    """Set accurate first date for monthly+ tables."""
 
     def set_start_date(orig, refs):
         for ref in refs.values():
@@ -113,12 +109,14 @@ def update_start_dates(dates):
     if timestep_to_monthly_dates:
         for frequency in (M, A, RP):
             if frequency in dates:
-                dates[frequency] = set_start_date(dates[frequency], timestep_to_monthly_dates)
+                dates[frequency] = set_start_date(
+                    dates[frequency], timestep_to_monthly_dates
+                )
     return dates
 
 
 def get_n_days_from_cumulative(cumulative_days):
-    """ Convert cumulative days to number of days pers step. """
+    """Convert cumulative days to number of days pers step."""
     if cumulative_days:
         # Separate number of days data if any M to RP table is available
         num_of_days = get_num_of_days(cumulative_days)
@@ -128,19 +126,26 @@ def get_n_days_from_cumulative(cumulative_days):
 
 
 def validate_year(year, is_leap, date, day):
-    """ Check if date for given and day corresponds to specified year. """
+    """Check if date for given and day corresponds to specified year."""
     if calendar.isleap(year) is is_leap:
         test_datetime = datetime(year, date.month, date.day)
         test_day = test_datetime.strftime("%A")
-        if day != test_day and day not in ("SummerDesignDay", "WinterDesignDay",):
+        if day != test_day and day not in (
+            "SummerDesignDay",
+            "WinterDesignDay",
+        ):
             max_year = datetime.now().year + 10  # give some choices from future
-            suitable_years = get_allowed_years(is_leap, date, day, max_year, n_samples=3)
-            formatted_day = test_datetime.strftime('%Y-%m-%d')
+            suitable_years = get_allowed_years(
+                is_leap, date, day, max_year, n_samples=3
+            )
+            formatted_day = test_datetime.strftime("%Y-%m-%d")
             raise StartDayMismatch(
                 "Start day '{}' for given day '{}'"
                 " does not correspond to real calendar day '{}'!"
                 "\nEither set 'year' kwarg as 'None' to identify year automatically"
-                " or use one of '{}'.".format(day, formatted_day, test_day, suitable_years)
+                " or use one of '{}'.".format(
+                    day, formatted_day, test_day, suitable_years
+                )
             )
     else:
         raise LeapYearMismatch(
@@ -149,31 +154,32 @@ def validate_year(year, is_leap, date, day):
             " but given year '{0}' is {2}."
             " Either set 'year' kwarg as 'None' to seek year automatically"
             " or use {1} year.".format(
-                year, 'leap' if is_leap else 'standard', 'standard' if is_leap else 'leap'
+                year,
+                "leap" if is_leap else "standard",
+                "standard" if is_leap else "leap",
             )
         )
 
 
 def is_leap_year_ts_to_d(raw_dates_arr):
-    """ Check if first year is leap based on timestep, hourly or daily data. """
+    """Check if first year is leap based on timestep, hourly or daily data."""
     for tup in raw_dates_arr:
         if (tup.month, tup.day) == (2, 29):
             return True
-        elif check_year_increment(raw_dates_arr[0], tup):
+        if check_year_increment(raw_dates_arr[0], tup):
             # stop once first year is covered
             return False
-    else:
-        return False
+    return False
 
 
 def seek_year(is_leap, date, day, max_year):
-    """ Find first year matching given criteria. """
+    """Find first year matching given criteria."""
     for year in range(max_year, 0, -1):
         if day in ("SummerDesignDay", "WinterDesignDay"):
             logging.info("Sizing simulation, setting year to 2002.")
             year = 2002
             break
-        elif calendar.isleap(year) is is_leap:
+        if calendar.isleap(year) is is_leap:
             test_datetime = datetime(year, date.month, date.day)
             test_start_day = test_datetime.strftime("%A")
             if day == test_start_day:
@@ -189,11 +195,15 @@ def seek_year(is_leap, date, day, max_year):
 
 
 def get_allowed_years(
-    is_leap, first_date, first_day, max_year, n_samples=4,
+    is_leap,
+    first_date,
+    first_day,
+    max_year,
+    n_samples=4,
 ):
-    """ Get a sample of allowed years for given conditions. """
+    """Get a sample of allowed years for given conditions."""
     allowed_years = []
-    for i in range(n_samples):
+    for _ in range(n_samples):
         year = seek_year(is_leap, first_date, first_day, max_year)
         max_year = year - 1
         allowed_years.append(year)
@@ -201,12 +211,12 @@ def get_allowed_years(
 
 
 def get_lowest_frequency(all_frequencies):
-    """ Find the shortest frequency from given ones. """
+    """Find the shortest frequency from given ones."""
     return next((freq for freq in (TS, H, D, M, A, RP) if freq in all_frequencies))
 
 
 def convert_raw_dates(raw_dates, year):
-    """ Transform raw E+ date and time data into datetime.datetime objects. """
+    """Transform raw E+ date and time data into datetime.datetime objects."""
     dates = {}
     for frequency, value in raw_dates.items():
         dates[frequency] = generate_datetime_dates(value, year)
@@ -218,7 +228,7 @@ def convert_raw_date_data(
     days_of_week,  #: Dict[str, List[str]],
     year,  #: Optional[int],
 ):  # -> Dict[str, List[datetime]]:
-    """ Convert EnergyPlus dates into standard datetime format. """
+    """Convert EnergyPlus dates into standard datetime format."""
     lowest_frequency = get_lowest_frequency(list(raw_dates.keys()))
     if lowest_frequency in {TS, H, D}:
         lowest_frequency_values = raw_dates[lowest_frequency]

@@ -9,8 +9,10 @@ class ResultsDictionary(OrderedDict):
 
     Properties
     ----------
-    sorted_items : list of tuple of (Variable, list of float)
-        Lexicographically sorted dictionary (by key).
+    frequency : str
+        EnergyPlus reporting interval.
+    time_series : Optional, list of datetime
+        Result timestamps.
     scalar : float
         First value of first variable.
     first_array : list of float
@@ -29,19 +31,23 @@ class ResultsDictionary(OrderedDict):
 
     """
 
+    def __init__(self, frequency=""):
+        super(ResultsDictionary, self).__init__()
+        self.frequency = frequency
+        self.time_series = None
+
     @property
     def _items(self):
         if self:
             return list(self.items())
-        else:
-            raise NoResults("Cannot get items, Results dictionary is empty. ")
+        raise NoResults("Cannot get items, Results dictionary is empty. ")
 
     @property
     def scalar(self):
         try:
             return self._items[0][1][0]
-        except IndexError:
-            raise NoResults("Cannot get scalar value, first array is empty!")
+        except IndexError as error:
+            raise NoResults("Cannot get scalar value, first array is empty!") from error
 
     @property
     def first_array(self):
@@ -58,3 +64,13 @@ class ResultsDictionary(OrderedDict):
     @property
     def arrays(self):
         return [v[1] for v in self._items]
+
+
+class ResultsHandler:
+    @classmethod
+    def to_table(cls, results_dictionary):
+        sub_tables = {}
+        for frequency in results_dictionary.frequencies:
+            sub_tables[frequency] = results_dictionary.get_results_for_frequency(
+                frequency
+            )

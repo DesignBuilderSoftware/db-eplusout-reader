@@ -4,14 +4,15 @@ from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
 from db_eplusout_reader.sql_reader import get_results_from_sql
 
 
-def get_results(file_or_path, variables, alike=False, start_date=None, end_date=None):
+def get_results(
+    file_or_path, variables, frequency, alike=False, start_date=None, end_date=None
+):
     """
     Extract results from given file.
 
     'Variable' is a named tuple to define expected output variables.
 
     v = Variable(
-        frequency="hourly",
         key="PEOPLE BLOCK1:ZONE2",
         type="Zone Thermal Comfort Fanger Model",
         units=None
@@ -32,19 +33,22 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
     from datetime import datetime
 
     variables = [
-         Variable("runperiod", "", "Electricity:Facility", "J"), # standard meter
-         Variable("runperiod", "Cumulative", "Electricity:Facility", "J"), # cumulative meter
-         Variable("daily", None, None, None), # get all daily outputs
-         Variable("hourly", "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
-         Variable("hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
+         Variable("", "Electricity:Facility", "J"), # standard meter
+         Variable("Cumulative", "Electricity:Facility", "J"), # cumulative meter
+         Variable(None, None, None), # get all outputs
+         Variable("PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
+         Variable("PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
     ]
 
     # get results for variables fully matching data dictionary values
-    # the last variable won't be found, start and end date slicing is not applied
+    # the last variable won't be found as variable 'key' does not fully match
+    # variables will be extracted from 'daily' table
+    # start and end date slicing is not applied
 
     results = get_results(
         r"C:\some\path\eplusout.sql",
         variables=variables,
+        frequency="daily",
         alike=False
     )
 
@@ -54,7 +58,8 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
     results = get_results(
         r"C:\some\path\eplusout.sql",
         variables=variables,
-        alike=False,
+        frequency="daily",
+        alike=True,
         start_date=datetime(2002, 5, 1, 0),
         end_date=datetime(2002, 5, 31, 23, 59)
     )
@@ -66,6 +71,8 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
         or path to unprocessed .sql file.
     variables : Variable or List of Variable
         Requested output variables.
+    frequency : str
+        An output interval, this can be one of {TS, H, D, M, A, RP} constants.
     alike : default False, bool
         Specify if full string or only part of variable attribute
         needs to match, filtering is case insensitive in both cases.
@@ -84,15 +91,20 @@ def get_results(file_or_path, variables, alike=False, start_date=None, end_date=
         _, ext = os.path.splitext(file_or_path)
         if ext == ".sql":
             results = get_results_from_sql(
-                file_or_path, variables, alike=alike, start_date=start_date, end_date=end_date
+                file_or_path,
+                variables,
+                frequency,
+                alike=alike,
+                start_date=start_date,
+                end_date=end_date,
             )
         elif ext == ".eso":
-            raise NotImplemented("Sorry, this has not been implemented yet.")
+            raise NotImplementedError("Sorry, this has not been implemented yet.")
         else:
             raise TypeError("Unsupported file type '{}' provided!".format(ext))
     else:
         if isinstance(file_or_path, (DBEsoFile, DBEsoFileCollection)):
-            raise NotImplemented("Sorry, this has not been implemented yet.")
+            raise NotImplementedError("Sorry, this has not been implemented yet.")
         else:
             raise TypeError(
                 "Unsupported class '{}' provided!".format(type(file_or_path).__name__)

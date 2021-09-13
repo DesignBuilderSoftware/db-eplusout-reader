@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from db_eplusout_reader.constants import *
+from db_eplusout_reader.constants import A, M, RP
 
 
 class RawOutputData:
@@ -30,5 +30,5 @@ class RawOutputData:
         return outputs, dates, cumulative_days, days_of_week
 
     def initialize_next_outputs_step(self, frequency):
-        for v in self.outputs[frequency].values():
-            v.append(float("nan"))
+        for value in self.outputs[frequency].values():
+            value.append(float("nan"))
