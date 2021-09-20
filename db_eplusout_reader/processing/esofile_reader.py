@@ -49,7 +49,7 @@ def process_header_line(line):
     Process E+ dictionary line and populate period header dictionaries.
 
     The goal is to process line syntax:
-        ID, number of results, key name - zone / environment, variable name [units] !timestamp [info]
+        ID, number of results, key name - zone / environment, variable name [units] !timestamp [info] # noqa E501
 
     Parameters
     ----------

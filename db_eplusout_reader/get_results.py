@@ -7,10 +7,10 @@ from db_eplusout_reader.sql_reader import get_results_from_sql
 def get_results(
     file_or_path, variables, frequency, alike=False, start_date=None, end_date=None
 ):
-    """
+    r"""
     Extract results from given file.
 
-    'Variable' is a named tuple to define expected output variables.
+    Use a single or list of 'Variable' named tuples to specify requested outputs.
 
     v = Variable(
         key="PEOPLE BLOCK1:ZONE2",
@@ -18,19 +18,30 @@ def get_results(
         units=None
     )
 
-    When one (or multiple) 'Variable' fields would be set as None,
-    filtering for specific part of variable will not be applied.
+    When one (or multiple) 'Variable' fields would be set as None, filtering
+    for specific part of variable will not be applied.
 
-    Variable(None, None, None, None) returns all outputs
-    Variable("hourly", None, None, None) returns all 'hourly' outputs.
+    Variable(None, None, None) returns all outputs
+    Variable(None, None, "J") returns all 'energy' outputs.
 
-    Note that frequency constants {TS, H, D, M, A, RP} can be imported
-    from db_esofile_reader.constants.
+    Frequency defines output interval - it can be one of "timestep", "hourly", "daily",
+    "monthly" "annual" and "runperiod". Constants module includes helpers TS, H, D, M, A, RP.
+
+    Function needs to be called multiple times to get results from various intervals.
+
+    Alike optional argument defines whether variable search should filter results by
+    full or just a substring (search is always case insensitive).
+
+    Start and end date optional arguments can slice resulting array based on timestamp data.
+
 
     Examples
     --------
-    from db_esofile_reader import Variable, get_results
     from datetime import datetime
+
+    from db_esofile_reader import Variable, get_results
+    from db_esofile_reader.constants import D
+
 
     variables = [
          Variable("", "Electricity:Facility", "J"), # standard meter
@@ -40,25 +51,26 @@ def get_results(
          Variable("PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model PMV", "")
     ]
 
-    # get results for variables fully matching data dictionary values
-    # the last variable won't be found as variable 'key' does not fully match
-    # variables will be extracted from 'daily' table
+    # get results for variables fully matching output variables
+    # the last variable above won't be found as variable 'key' does not fully match
+    # variables will be extracted from 'daily' interval results
     # start and end date slicing is not applied
 
     results = get_results(
         r"C:\some\path\eplusout.sql",
         variables=variables,
-        frequency="daily",
+        frequency=D,
         alike=False
     )
 
-    # get results for variables matching only substrings of data dictionary values
-    # the last variable will be found, only 'May' data will be included
+    # 'alike' argument is set to True so even substring match is enough to match variable
+    # the last variable will be found ("PEOPLE BLOCK" matches "PEOPLE BLOCK1:ZONE2")
+    # start and end dates are specified so only 'May' data will be included
 
     results = get_results(
         r"C:\some\path\eplusout.sql",
         variables=variables,
-        frequency="daily",
+        frequency=D,
         alike=True,
         start_date=datetime(2002, 5, 1, 0),
         end_date=datetime(2002, 5, 31, 23, 59)

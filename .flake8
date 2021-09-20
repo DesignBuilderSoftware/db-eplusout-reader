@@ -1,5 +1,5 @@
 [flake8]
-ignore = R1725
+ignore = R1725, E203
 max-line-length = 96
 exclude =
     .git,

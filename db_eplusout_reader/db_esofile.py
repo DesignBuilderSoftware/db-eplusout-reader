@@ -34,13 +34,13 @@ class DBEsoFile:
         environment_name 'TEST (01-01:31-12)'
         header {
             'hourly' : {
-                Variable(frequency='hourly', key='B1:ZONE1', type='Zone Mean Air Temperature', units='C'): 322,
-                Variable(frequency='hourly', key='B1:ZONE2', type='Zone Mean Air Humidity Ratio', units='kgWater/kgDryAir'): 304
+                Variable(key='B1:ZONE1', type='Zone Mean Air Temperature', units='C'): 322,
+                Variable(key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 304
                 ...
             },
             'daily' : {
-                Variable(frequency='daily', key='B1:ZONE1', type='Zone Air Relative Humidity', units='%'): 521,
-                Variable(frequency='daily', key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 565
+                Variable(key='B1:ZONE1', type='Zone Air Relative Humidity', units='%'): 521,
+                Variable(key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 565
                 ...
             }
         }
