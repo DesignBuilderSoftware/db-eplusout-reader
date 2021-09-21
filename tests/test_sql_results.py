@@ -3,7 +3,7 @@ import unittest
 from datetime import datetime
 
 from db_eplusout_reader import Variable, get_results
-from db_eplusout_reader.constants import D, H, M, RP
+from db_eplusout_reader.constants import RP, D, H, M
 from db_eplusout_reader.sql_reader import get_timestamps_from_sql
 
 SQL_PATH = os.path.join(os.path.dirname(__file__), "test_files", "eplusout.sql")

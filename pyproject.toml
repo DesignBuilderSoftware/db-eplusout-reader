@@ -12,7 +12,11 @@ black = {version = "^21.8b0", python = "^3.6.8"}
 flake8 = "^3.9.2"
 pylint = "^2.10.2"
 pre-commit = "^2.15.0"
+isort = "^5.9.3"
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"

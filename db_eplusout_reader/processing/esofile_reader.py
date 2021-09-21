@@ -3,7 +3,7 @@ from collections import defaultdict, namedtuple
 from datetime import datetime
 from functools import partial
 
-from db_eplusout_reader.constants import A, D, H, M, RP, TS
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.exceptions import (
     BlankLineError,
     IncompleteFile,

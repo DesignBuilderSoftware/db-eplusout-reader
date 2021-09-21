@@ -65,6 +65,9 @@ class ResultsDictionary(OrderedDict):
     def arrays(self):
         return [v[1] for v in self._items]
 
+    def to_csv(self, path):
+        pass
+
 
 class ResultsHandler:
     @classmethod

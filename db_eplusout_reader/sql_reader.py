@@ -2,8 +2,8 @@ import sqlite3
 from collections import OrderedDict
 from datetime import datetime, timedelta
 
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.processing.esofile_reader import Variable
-from db_eplusout_reader.constants import A, D, H, M, RP, TS
 from db_eplusout_reader.results_dict import ResultsDictionary
 
 DATA_TABLE = "ReportData"

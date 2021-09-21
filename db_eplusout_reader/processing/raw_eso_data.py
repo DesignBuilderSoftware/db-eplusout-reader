@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from db_eplusout_reader.constants import A, M, RP
+from db_eplusout_reader.constants import RP, A, M
 
 
 class RawOutputData:

@@ -1,4 +1,4 @@
-from db_eplusout_reader.constants import A, D, H, M, RP, TS
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.exceptions import CollectionRequired
 from db_eplusout_reader.processing.esofile_reader import process_eso_file
 from db_eplusout_reader.processing.esofile_time import (
