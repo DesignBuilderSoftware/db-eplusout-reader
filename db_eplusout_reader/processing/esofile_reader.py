@@ -297,7 +297,7 @@ def read_file(file):
     version, _ = process_statement_line(next(file))
     last_standard_item_id = 6 if version >= 890 else 5
 
-    # Skip standard reporting frequencys
+    # Skip standard reporting frequencies
     for _ in range(last_standard_item_id):
         next(file)
 
