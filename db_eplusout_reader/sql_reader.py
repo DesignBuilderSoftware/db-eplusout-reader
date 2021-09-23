@@ -117,32 +117,6 @@ def get_ids_dict(conn, variables, sql_frequency, alike):
     return all_ids_dict
 
 
-def create_placeholders(id_, start_date, end_date):
-    """Create an appropriate placeholder tuple."""
-    placeholders = [id_]
-    if start_date:
-        placeholders.extend(
-            [
-                start_date.year,
-                start_date.month,
-                start_date.day,
-                start_date.hour,
-                start_date.minute,
-            ]
-        )
-    if end_date:
-        placeholders.extend(
-            [
-                end_date.year,
-                end_date.month,
-                end_date.day,
-                end_date.hour,
-                end_date.minute,
-            ]
-        )
-    return tuple(placeholders)
-
-
 def validate_time(timestamp, start_date, end_date):
     """Check if given timestamp lies between start and end dates."""
     if start_date and end_date:
