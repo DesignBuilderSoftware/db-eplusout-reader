@@ -100,14 +100,12 @@ def read_header(eso_file):
         raw_line = next(eso_file)
         try:
             line_id, key, type_, units, frequency = process_header_line(raw_line)
-        except AttributeError as error:
+        except AttributeError:
             if "End of Data Dictionary" in raw_line:
                 break
             if raw_line == "\n":
-                raise BlankLineError("Empty line!") from error
-            raise InvalidLineSyntax(
-                "Unexpected line syntax: '{}'!".format(raw_line)
-            ) from error
+                raise BlankLineError("Empty line!")
+            raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
         header[frequency][Variable(key, type_, units)] = line_id
     return header
 
@@ -279,14 +277,12 @@ def read_body(eso_file, highest_frequency_id, header):
                 res = float(line[0])
                 raw_outputs.outputs[frequency][line_id][-1] = res
 
-        except ValueError as error:
+        except ValueError:
             if "End of Data" in raw_line:
                 break
             if raw_line == "\n":
-                raise BlankLineError("Empty line!") from error
-            raise InvalidLineSyntax(
-                "Unexpected line syntax: '{}'!".format(raw_line)
-            ) from error
+                raise BlankLineError("Empty line!")
+            raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
 
     return all_raw_outputs
 
@@ -314,5 +310,5 @@ def process_eso_file(file_path):
     try:
         with open(file_path, "r") as file:
             return read_file(file)
-    except StopIteration as error:
-        raise IncompleteFile("File '{}' is not complete!".format(file_path)) from error
+    except StopIteration:
+        raise IncompleteFile("File '{}' is not complete!".format(file_path))

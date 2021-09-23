@@ -48,8 +48,8 @@ class ResultsDictionary(OrderedDict):
     def scalar(self):
         try:
             return self._items[0][1][0]
-        except IndexError as error:
-            raise NoResults("Cannot get scalar value, first array is empty!") from error
+        except IndexError:
+            raise NoResults("Cannot get scalar value, first array is empty!")
 
     @property
     def first_array(self):
