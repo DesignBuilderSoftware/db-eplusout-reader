@@ -5,13 +5,13 @@ name: Tests
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
     paths-ignore: 
     - README.MD
     - pyproject.toml
 
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 
 jobs:
