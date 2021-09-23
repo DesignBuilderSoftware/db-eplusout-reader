@@ -1,6 +1,8 @@
-from collections import OrderedDict
+import csv
+from collections import OrderedDict, deque
 
 from db_eplusout_reader.exceptions import NoResults
+from db_eplusout_reader.processing.esofile_reader import Variable
 
 
 class ResultsDictionary(OrderedDict):
@@ -65,15 +67,109 @@ class ResultsDictionary(OrderedDict):
     def arrays(self):
         return [v[1] for v in self._items]
 
-    def to_csv(self, path):
-        pass
+    def to_table(self, explode_header=True):
+        """
+        Get results in a table like format.
+
+        Parameters
+        ----------
+        explode_header : bool
+            Split variable into multiple rows if true,
+            otherwise put one variable into one row.
+
+        Returns
+        -------
+        list of deque of {float, str or datetime}
+            Table like nested list of lists.
+
+        """
+        return ResultsHandler.convert_dict_to_table(self, explode_header)
+
+    def to_csv(self, path, explode_header=True, delimiter=",", **kwargs):
+        """
+        Save results as a csv file.
+
+        Parameters
+        ----------
+        path : os.PathLike
+            Defines a file path of the csv file.
+        explode_header : bool
+            Split variable into multiple rows if true,
+            otherwise put one variable into one row.
+        delimiter : str, default ","
+            Csv delimiter character.
+        **kwargs
+            Key word arguments passed to csv writer.
+
+        Returns
+        -------
+            None
+
+        """
+        table = ResultsHandler.convert_dict_to_table(self, explode_header)
+        ResultsWriter.write_table_to_csv(table, path, delimiter, **kwargs)
 
 
 class ResultsHandler:
+    """Handles results dictionary transformations."""
+
     @classmethod
-    def to_table(cls, results_dictionary):
-        sub_tables = {}
-        for frequency in results_dictionary.frequencies:
-            sub_tables[frequency] = results_dictionary.get_results_for_frequency(
-                frequency
-            )
+    def _explode_header(cls, header):
+        """Split header into multiple rows."""
+        header_rows = deque()
+        for field in Variable._fields:
+            row = deque()
+            for variable in header:
+                row.append(getattr(variable, field))
+            header_rows.append(row)
+        return header_rows
+
+    @classmethod
+    def _insert_index_column(cls, table, index, offset):
+        """Add first column with header names and datetime / range data."""
+        index_column = deque(["" for _ in range(offset)]) + deque(index)
+        for i, item in enumerate(index_column):
+            table[i].appendleft(item)
+
+    @classmethod
+    def convert_dict_to_table(cls, results_dictionary, explode_header):
+        """
+        Convert dictionary like into array of arrays
+
+        Parameters
+        ----------
+        results_dictionary : ResultsDictionary
+            Results dictionary input.
+        explode_header : bool
+            Split variable into multiple rows if true,
+            otherwise put one variable into one row.
+
+        Returns
+        -------
+        list of deque of {float, str or datetime}
+            Table like nested list of lists.
+
+        """
+        header = results_dictionary.variables
+        n_rows = len(results_dictionary[header[0]])
+        table = cls._explode_header(header) if explode_header else [deque(header)]
+        for i in range(0, n_rows):
+            row = deque()
+            for array in results_dictionary.arrays:
+                row.append(array[i])
+            table.append(row)
+        if results_dictionary.time_series:
+            offset = len(Variable._fields) if explode_header else 1
+            cls._insert_index_column(table, results_dictionary.time_series, offset)
+        return table
+
+
+class ResultsWriter:
+    """Handle results dictionary i/o operations."""
+
+    @classmethod
+    def write_table_to_csv(cls, table, path, delimiter, **kwargs):
+        with open(path, mode="w") as csv_file:
+            writer = csv.writer(csv_file, delimiter, **kwargs)
+            for row in table:
+                writer.writerow(row)
