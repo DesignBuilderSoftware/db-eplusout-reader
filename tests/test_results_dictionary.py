@@ -1,10 +1,12 @@
+import csv
 from datetime import datetime
 
 import pytest
 
 from db_eplusout_reader import Variable
 from db_eplusout_reader.constants import H
-from db_eplusout_reader.results_dict import NoResults, ResultsDictionary, ResultsHandler
+from db_eplusout_reader.exceptions import InvalidShape, NoResults
+from db_eplusout_reader.results_dict import ResultsDictionary, ResultsHandler
 
 
 class TestResultsDictionary:
@@ -76,7 +78,63 @@ class TestResultsDictionary:
         for row in table:
             assert len(row) == n_columns
 
-    def test_to_csv(self):
+    @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
+    def test_to_csv(self, results_dictionary, temp_csv, delimiter):
+        results_dictionary.to_csv(temp_csv, delimiter=delimiter)
+        with open(temp_csv) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=delimiter)
+            assert list(csv_reader) == [
+                ["", "Temperature", "Temperature", "Temperature"],
+                ["", "Zone2", "Zone1", "Zone3"],
+                ["", "C", "C", "C"],
+                ["2002-01-01 00:00:00", "22", "20", "19"],
+                ["2002-01-02 00:00:00", "23", "21", "23"],
+                ["2002-01-03 00:00:00", "19", "20", "20"],
+            ]
 
-        table = ResultsHandler.convert_dict_to_table(self.rd)
-        print(table)
+    @pytest.mark.parametrize(
+        "explode, expected",
+        [
+            (
+                True,
+                [
+                    ["", "Temperature", "Temperature", "Temperature"],
+                    ["", "Zone2", "Zone1", "Zone3"],
+                    ["", "C", "C", "C"],
+                    ["2002-01-01 00:00:00", "22", "20", "19"],
+                    ["2002-01-02 00:00:00", "23", "21", "23"],
+                    ["2002-01-03 00:00:00", "19", "20", "20"],
+                ],
+            ),
+            (
+                False,
+                [
+                    [
+                        "",
+                        "Variable(key='Temperature', type='Zone2', units='C')",
+                        "Variable(key='Temperature', type='Zone1', units='C')",
+                        "Variable(key='Temperature', type='Zone3', units='C')",
+                    ],
+                    ["2002-01-01 00:00:00", "22", "20", "19"],
+                    ["2002-01-02 00:00:00", "23", "21", "23"],
+                    ["2002-01-03 00:00:00", "19", "20", "20"],
+                ],
+            ),
+        ],
+    )
+    def test_to_csv_explode_header(
+        self, results_dictionary, temp_csv, explode, expected
+    ):
+        results_dictionary.to_csv(temp_csv, explode_header=explode)
+        with open(temp_csv) as csv_file:
+            csv_reader = csv.reader(csv_file)
+            assert list(csv_reader) == expected
+
+    def test_get_table_shape(self, results_dictionary):
+        table = results_dictionary.to_table()
+        assert ResultsHandler.get_table_shape(table) == (6, 4)
+
+    def test_get_table_shape_invalid(self):
+        table = [[1, 2, 3], [1, 2], [1, 2, 3]]
+        with pytest.raises(InvalidShape):
+            _ = ResultsHandler.get_table_shape(table)

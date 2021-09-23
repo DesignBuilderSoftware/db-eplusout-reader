@@ -2,6 +2,7 @@ from datetime import datetime
 
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, D, H, M
+from db_eplusout_reader.results_dict import ResultsHandler
 from db_eplusout_reader.sql_reader import get_timestamps_from_sql
 
 
@@ -94,5 +95,8 @@ class TestSql:
             )
             assert len(results_dictionary.time_series) == expected
 
-    def test_results_to_csv(self):
-        assert False
+    def test_results_to_csv(self, sql_path):
+        results_dictionary = get_results(
+            sql_path, Variable(None, None, None), frequency=M
+        )
+        assert ResultsHandler.get_table_shape(results_dictionary.to_table()) == (15, 36)

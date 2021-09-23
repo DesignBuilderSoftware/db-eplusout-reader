@@ -1,4 +1,5 @@
 import os
+import shutil
 from datetime import datetime
 
 import pytest
@@ -6,6 +7,14 @@ import pytest
 from db_eplusout_reader import DBEsoFile, DBEsoFileCollection, Variable
 from db_eplusout_reader.constants import H
 from db_eplusout_reader.results_dict import ResultsDictionary
+
+
+@pytest.fixture(scope="function")
+def temp_csv(tmp_path):
+    try:
+        yield os.path.join(tmp_path, "test.csv")
+    finally:
+        shutil.rmtree(tmp_path, ignore_errors=True)
 
 
 @pytest.fixture(scope="session")

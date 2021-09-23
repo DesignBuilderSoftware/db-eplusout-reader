@@ -24,3 +24,7 @@ class StartDayMismatch(Exception):
 
 class NoResults(Exception):
     """Exception raised when numeric outputs are requsted in empty results dictionary."""
+
+
+class InvalidShape(Exception):
+    """Exception raised when table does not have uniform number of items in each column."""

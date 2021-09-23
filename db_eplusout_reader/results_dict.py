@@ -1,7 +1,7 @@
 import csv
 from collections import OrderedDict, deque
 
-from db_eplusout_reader.exceptions import NoResults
+from db_eplusout_reader.exceptions import InvalidShape, NoResults
 from db_eplusout_reader.processing.esofile_reader import Variable
 
 
@@ -95,7 +95,7 @@ class ResultsDictionary(OrderedDict):
             Defines a file path of the csv file.
         explode_header : bool
             Split variable into multiple rows if true,
-            otherwise put one variable into one row.
+            otherwise put one variable into one cell.
         delimiter : str, default ","
             Csv delimiter character.
         **kwargs
@@ -163,13 +163,23 @@ class ResultsHandler:
             cls._insert_index_column(table, results_dictionary.time_series, offset)
         return table
 
+    @classmethod
+    def get_table_shape(cls, table):
+        """Read table dimensions."""
+        n_rows = len(table)
+        iterator = iter(table)
+        n_columns = len(next(iterator))
+        if not all(len(column) == n_columns for column in iterator):
+            raise InvalidShape("Something is wrong, table is not uniform.")
+        return n_rows, n_columns
+
 
 class ResultsWriter:
     """Handle results dictionary i/o operations."""
 
     @classmethod
     def write_table_to_csv(cls, table, path, delimiter, **kwargs):
-        with open(path, mode="w") as csv_file:
-            writer = csv.writer(csv_file, delimiter, **kwargs)
+        with open(path, mode="w", newline="") as csv_file:
+            writer = csv.writer(csv_file, delimiter=delimiter, **kwargs)
             for row in table:
                 writer.writerow(row)
