@@ -3,8 +3,12 @@ from collections import defaultdict, namedtuple
 from datetime import datetime
 from functools import partial
 
-from db_eplusout_reader.constants import *
-from db_eplusout_reader.exceptions import BlankLineError, InvalidLineSyntax, IncompleteFile
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
+from db_eplusout_reader.exceptions import (
+    BlankLineError,
+    IncompleteFile,
+    InvalidLineSyntax,
+)
 from db_eplusout_reader.processing.esofile_time import EsoTimestamp
 from db_eplusout_reader.processing.raw_eso_data import RawOutputData
 
@@ -15,24 +19,24 @@ MONTHLY_LINE = 4
 RUNPERIOD_LINE = 5
 ANNUAL_LINE = 6
 
-Variable = namedtuple("Variable", "frequency key type units")
+Variable = namedtuple("Variable", "key type units")
 
 
 def get_eso_file_version(raw_version):
-    """ Return eso file version as an integer (i.e.: 860, 890). """
+    """Return eso file version as an integer (i.e.: 860, 890)."""
     version = raw_version.strip()
     start = version.index(" ")
-    return int(version[(start + 1): (start + 6)].replace(".", ""))
+    return int(version[(start + 1) : (start + 6)].replace(".", ""))
 
 
 def get_eso_file_timestamp(timestamp):
-    """ Return date and time of the eso file generation as a Datetime. """
+    """Return date and time of the eso file generation as a Datetime."""
     timestamp = timestamp.split("=")[1].strip()
     return datetime.strptime(timestamp, "%Y.%m.%d %H:%M")
 
 
 def process_statement_line(line):
-    """ Extract the version and time of the file generation. """
+    """Extract the version and time of the file generation."""
     # Program Version,EnergyPlus, Version 8.9.0-40101eaafd, YMD=2020.01.08 16:15
     _, raw_version, timestamp = line.rsplit(",", 2)
     version = get_eso_file_version(raw_version)
@@ -45,7 +49,7 @@ def process_header_line(line):
     Process E+ dictionary line and populate period header dictionaries.
 
     The goal is to process line syntax:
-        ID, number of results, key name - zone / environment, variable name [units] !timestamp [info]
+        ID, number of results, key name - zone / environment, variable name [units] !timestamp [info] # noqa E501
 
     Parameters
     ----------
@@ -58,7 +62,7 @@ def process_header_line(line):
         Processed line tuple (ID, key name, variable name, units, frequency)
 
     """
-    pattern = re.compile("^(\d+),(\d+),(.*?)(?:,(.*?) ?\[| ?\[)(.*?)\] !(\w*)")
+    pattern = re.compile(r"^(\d+),(\d+),(.*?)(?:,(.*?) ?\[| ?\[)(.*?)\] !(\w*)")
 
     # this raises attribute error when there's some unexpected line syntax
     raw_line_id, _, key, type_, units, frequency = pattern.search(line).groups()
@@ -99,11 +103,10 @@ def read_header(eso_file):
         except AttributeError:
             if "End of Data Dictionary" in raw_line:
                 break
-            elif raw_line == "\n":
+            if raw_line == "\n":
                 raise BlankLineError("Empty line!")
-            else:
-                raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
-        header[frequency][Variable(frequency, key, type_, units)] = line_id
+            raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
+        header[frequency][Variable(key, type_, units)] = line_id
     return header
 
 
@@ -132,7 +135,7 @@ def process_ts_h_d_frequency_line(line_id, data):
     """
 
     def parse_timestep_or_hourly_frequency():
-        """ Process TS or H frequency entry and return frequency identifier. """
+        """Process TS or H frequency entry and return frequency identifier."""
         # omit day of week in conversion
         items = [int(float(item)) for item in data[:-1]]
         frequency = EsoTimestamp(items[1], items[2], items[4], items[6])
@@ -140,11 +143,10 @@ def process_ts_h_d_frequency_line(line_id, data):
         # check if frequency is timestep or hourly frequency
         if items[5] == 0 and items[6] == 60:
             return H, frequency, data[-1].strip()
-        else:
-            return TS, frequency, data[-1].strip()
+        return TS, frequency, data[-1].strip()
 
     def parse_daily_frequency():
-        """ Populate D list and return identifier. """
+        """Populate D list and return identifier."""
         # omit day of week in in conversion
         i = [int(item) for item in data[:-1]]
         return D, EsoTimestamp(i[1], i[2], 0, 0), data[-1].strip()
@@ -181,15 +183,15 @@ def process_month_rp_frequency_line(line_id, data):
     """
 
     def parse_monthly_frequency():
-        """ Populate M list and return identifier. """
+        """Populate M list and return identifier."""
         return M, EsoTimestamp(int(data[1]), 1, 0, 0), int(data[0])
 
     def parse_runperiod_frequency():
-        """ Populate RP list and return identifier. """
+        """Populate RP list and return identifier."""
         return RP, EsoTimestamp(1, 1, 0, 0), int(data[0])
 
     def parse_annual_frequency():
-        """ Populate A list and return identifier. """
+        """Populate A list and return identifier."""
         return A, EsoTimestamp(1, 1, 0, 0), None
 
     categories = {
@@ -256,7 +258,7 @@ def read_body(eso_file, highest_frequency_id, header):
     list of RawOutputData
         Processed ESO file data.
 
-     """
+    """
     all_raw_outputs = []
     raw_outputs = None
     frequency = None
@@ -278,21 +280,20 @@ def read_body(eso_file, highest_frequency_id, header):
         except ValueError:
             if "End of Data" in raw_line:
                 break
-            elif raw_line == "\n":
+            if raw_line == "\n":
                 raise BlankLineError("Empty line!")
-            else:
-                raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
+            raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
 
     return all_raw_outputs
 
 
 def read_file(file):
-    """ Read raw EnergyPlus output file. """
+    """Read raw EnergyPlus output file."""
     # process first few standard lines, ignore timestamp
-    version, timestamp = process_statement_line(next(file))
+    version, _ = process_statement_line(next(file))
     last_standard_item_id = 6 if version >= 890 else 5
 
-    # Skip standard reporting frequencys
+    # Skip standard reporting frequencies
     for _ in range(last_standard_item_id):
         next(file)
 
@@ -305,7 +306,7 @@ def read_file(file):
 
 
 def process_eso_file(file_path):
-    """ Trigger eso file processing. """
+    """Trigger eso file processing."""
     try:
         with open(file_path, "r") as file:
             return read_file(file)

@@ -1,80 +1,102 @@
-import os
-import unittest
 from datetime import datetime
 
 from db_eplusout_reader import Variable, get_results
-from db_eplusout_reader.constants import *
+from db_eplusout_reader.constants import RP, D, H, M
+from db_eplusout_reader.results_dict import ResultsHandler
 from db_eplusout_reader.sql_reader import get_timestamps_from_sql
 
-SQL_PATH = os.path.join(os.path.dirname(__file__), "test_files", "eplusout.sql")
 
-
-class TestSql(unittest.TestCase):
-    def test_get_results_exact_match(self):
+class TestSql:
+    def test_get_results_exact_match(self, sql_path):
         variable = Variable(
-            H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""
+            "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""
         )
-        results = get_results(SQL_PATH, variable)
-        self.assertListEqual(list(results.keys()), [variable])
-        self.assertEqual(8760, len(results[variable]))
+        results = get_results(sql_path, variable, frequency=H)
+        assert [variable] == list(results.keys()), [variable]
+        assert 8760 == len(results[variable])
 
-    def test_get_results_multiple_variables(self):
+    def test_get_results_multiple_variables(self, sql_path):
         variables = [
-            Variable(D, "BLOCK1:ZONE2", "Zone Air Relative Humidity", "%"),
-            Variable(D, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
+            Variable("BLOCK1:ZONE2", "Zone Air Relative Humidity", "%"),
+            Variable(
+                "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""
+            ),
         ]
-        results = get_results(SQL_PATH, variables)
-        self.assertListEqual(list(results.keys()), variables)
-        self.assertTrue(all(map(lambda x: len(x) == 365, results.values())))
+        results = get_results(sql_path, variables, frequency=D)
+        assert variables == list(results.keys()), variables
+        assert all(map(lambda x: len(x) == 365, results.values()))
 
-    def test_get_results_alike(self):
-        variable = Variable(
-            "hourly", "PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model", ""
-        )
-        results = get_results(SQL_PATH, variable, alike=True)
+    def test_get_results_alike(self, sql_path):
+        variable = Variable("PEOPLE BLOCK", "Zone Thermal Comfort Fanger Model", "")
+        results = get_results(sql_path, variable, frequency=H, alike=True)
         expected = [
-            Variable(H, 'PEOPLE BLOCK1:ZONE1', 'Zone Thermal Comfort Fanger Model PMV', ''),
-            Variable(H, 'PEOPLE BLOCK1:ZONE1', 'Zone Thermal Comfort Fanger Model PPD', '%'),
-            Variable(H, 'PEOPLE BLOCK1:ZONE2', 'Zone Thermal Comfort Fanger Model PMV', ''),
-            Variable(H, 'PEOPLE BLOCK1:ZONE2', 'Zone Thermal Comfort Fanger Model PPD', '%'),
+            Variable(
+                "PEOPLE BLOCK1:ZONE1", "Zone Thermal Comfort Fanger Model PMV", ""
+            ),
+            Variable(
+                "PEOPLE BLOCK1:ZONE1", "Zone Thermal Comfort Fanger Model PPD", "%"
+            ),
+            Variable(
+                "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""
+            ),
+            Variable(
+                "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PPD", "%"
+            ),
         ]
-        self.assertListEqual(expected, list(results.keys()))
+        assert list(results.keys()) == expected
 
-    def test_get_all_results(self):
-        variable = Variable(None, None, None, None)
-        results = get_results(SQL_PATH, variable, alike=True)
-        self.assertEqual(140, len(results.keys()))
+    def test_get_all_results(self, sql_path):
+        variable = Variable(None, None, None)
+        results = get_results(sql_path, variable, H, alike=True)
+        assert len(results.keys()) == 35
 
-    def test_get_all_sliced_results(self):
-        variable = Variable(None, None, None, None)
+    def test_get_all_sliced_results(self, sql_path):
+        variable = Variable(None, None, None)
         results = get_results(
-            SQL_PATH,
+            sql_path,
             variable,
-            alike=True,
+            frequency=H,
+            alike=False,
             start_date=datetime(2013, 1, 1),
-            end_date=datetime(2013, 2, 1)
+            end_date=datetime(2013, 2, 1),
         )
-        self.assertEqual(140, len(results.keys()))
+        assert len(results.keys()) == 35
+        assert len(results.first_array) == 31 * 24
 
-    def test_get_results_start_end_dates(self):
+    def test_get_results_start_end_dates(self, sql_path):
         variable = Variable(
-            H, "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PPD", "%"
-        ),
+            "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PPD", "%"
+        )
         results = get_results(
-            SQL_PATH,
+            sql_path,
             variables=variable,
+            frequency=H,
             alike=False,
             start_date=datetime(2013, 5, 31, 0),
-            end_date=datetime(2013, 5, 31, 23, 59)
+            end_date=datetime(2013, 5, 31, 23, 59),
         )
-        self.assertEqual(24, len(list(results.values())[0]))
+        assert len(list(results.values())[0]) == 24
 
-    def test_get_timestamps_monthly(self):
-        timestamps = get_timestamps_from_sql(SQL_PATH, "monthly")
-        expected = [datetime(2013, i, 1) for i in range(1, 13)]
-        self.assertListEqual(expected, timestamps)
+    def test_get_timestamps_monthly(self, sql_path):
+        timestamps = get_timestamps_from_sql(sql_path, "monthly")
+        assert timestamps == [datetime(2013, i, 1) for i in range(1, 13)]
 
-    def test_get_results_meter(self):
-        variable = Variable(RP, "", "DistrictHeating:Facility", "J")
-        results = get_results(SQL_PATH, variables=variable)
-        self.assertDictEqual({variable: [30475176136.970848]}, results)
+    def test_get_results_meter(self, sql_path):
+        variable = Variable("", "DistrictHeating:Facility", "J")
+        results = get_results(sql_path, variables=variable, frequency=RP)
+        assert {variable: [30475176136.970848]} == results
+
+    def test_results_time_series(self, sql_path):
+        for frequency, expected in zip([RP, M, D, H], [1, 12, 365, 8760]):
+            results_dictionary = get_results(
+                sql_path,
+                Variable("", "DistrictHeating:Facility", "J"),
+                frequency=frequency,
+            )
+            assert len(results_dictionary.time_series) == expected
+
+    def test_results_to_csv(self, sql_path):
+        results_dictionary = get_results(
+            sql_path, Variable(None, None, None), frequency=M
+        )
+        assert ResultsHandler.get_table_shape(results_dictionary.to_table()) == (15, 36)

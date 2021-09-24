@@ -5,11 +5,24 @@ description = ""
 authors = ["Vojtech Panek <vojtech.panek@designbuilder.co.uk>"]
 
 [tool.poetry.dependencies]
-python = "^2.7"
+python = ">=2.7.9,<4.0"
+pandas = {version = "^1.3.3", optional = true, python = "^3.7.1"}
 
 [tool.poetry.dev-dependencies]
+black = {version = "^21.8b0", python = "^3.6.8"}
+flake8 = "^3.9.2"
+pylint = "^2.10.2"
+pre-commit = "^2.15.0"
+isort = "^5.9.3"
+pytest = "^6.2.5"
+pytest-cov = "^2.12.1"
 
+[tool.poetry.extras]
+pandas = ["pandas"]
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.isort]
+profile = "black"

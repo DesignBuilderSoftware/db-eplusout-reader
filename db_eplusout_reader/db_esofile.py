@@ -1,20 +1,14 @@
-from db_eplusout_reader.constants import *
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.exceptions import CollectionRequired
 from db_eplusout_reader.processing.esofile_reader import process_eso_file
-from db_eplusout_reader.processing.esofile_time import convert_raw_date_data, \
-    get_n_days_from_cumulative
+from db_eplusout_reader.processing.esofile_time import (
+    convert_raw_date_data,
+    get_n_days_from_cumulative,
+)
 
 
 class DBEsoFile:
-    def __init__(
-        self,
-        environment_name,
-        header,
-        outputs,
-        dates,
-        n_days,
-        days_of_week
-    ):
+    def __init__(self, environment_name, header, outputs, dates, n_days, days_of_week):
         """
         Represents processed EnergyPlus eso file output data.
 
@@ -40,13 +34,13 @@ class DBEsoFile:
         environment_name 'TEST (01-01:31-12)'
         header {
             'hourly' : {
-                Variable(frequency='hourly', key='B1:ZONE1', type='Zone Mean Air Temperature', units='C'): 322,
-                Variable(frequency='hourly', key='B1:ZONE2', type='Zone Mean Air Humidity Ratio', units='kgWater/kgDryAir'): 304
+                Variable(key='B1:ZONE1', type='Zone Mean Air Temperature', units='C'): 322,
+                Variable(key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 304
                 ...
             },
             'daily' : {
-                Variable(frequency='daily', key='B1:ZONE1', type='Zone Air Relative Humidity', units='%'): 521,
-                Variable(frequency='daily', key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 565
+                Variable(key='B1:ZONE1', type='Zone Air Relative Humidity', units='%'): 521,
+                Variable(key='B1:ZONE2', type='Zone Air Relative Humidity', units='%'): 565
                 ...
             }
         }
@@ -104,7 +98,7 @@ class DBEsoFile:
             outputs=raw_outputs.outputs,
             dates=dates,
             n_days=n_days,
-            days_of_week=raw_outputs.days_of_week
+            days_of_week=raw_outputs.days_of_week,
         )
 
     @classmethod
@@ -112,13 +106,13 @@ class DBEsoFile:
         all_raw_outputs = process_eso_file(file_path)
         if len(all_raw_outputs) == 1:
             return cls._from_raw_outputs(all_raw_outputs[0], year)
-        else:
-            raise CollectionRequired(
-                "Cannot process file {}. "
-                "as there are multiple environments included.\n"
-                "Use 'DBEsoFileCollection.from_path' "
-                "to generate multiple files.""".format(file_path)
-            )
+        raise CollectionRequired(
+            "Cannot process file {}. "
+            "as there are multiple environments included.\n"
+            "Use 'DBEsoFileCollection.from_path' "
+            "to generate multiple files."
+            "".format(file_path)
+        )
 
     @property
     def frequencies(self):
