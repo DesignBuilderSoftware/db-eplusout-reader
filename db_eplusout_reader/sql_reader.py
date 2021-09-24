@@ -79,7 +79,7 @@ def fetch_data_dict_rows(conn, variable, sql_frequency, alike):
             place_holders = add_wild_cards(sql_variable.values())
         else:
             place_holders = tuple(sql_variable.values())
-        res = conn.execute(statement, (sql_frequency, *place_holders))
+        res = conn.execute(statement, (sql_frequency,) + place_holders)
     else:
         res = conn.execute(statement, (sql_frequency,))
     return res

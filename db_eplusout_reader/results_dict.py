@@ -1,5 +1,6 @@
 import csv
-from collections import OrderedDict, deque
+import sys
+from collections import OrderedDict
 
 from db_eplusout_reader.exceptions import InvalidShape, NoResults
 from db_eplusout_reader.processing.esofile_reader import Variable
@@ -79,7 +80,7 @@ class ResultsDictionary(OrderedDict):
 
         Returns
         -------
-        list of deque of {float, str or datetime}
+        list of list of {float, str or datetime}
             Table like nested list of lists.
 
         """
@@ -116,9 +117,9 @@ class ResultsHandler:
     @classmethod
     def _explode_header(cls, header):
         """Split header into multiple rows."""
-        header_rows = deque()
+        header_rows = []
         for field in Variable._fields:
-            row = deque()
+            row = []
             for variable in header:
                 row.append(getattr(variable, field))
             header_rows.append(row)
@@ -127,9 +128,9 @@ class ResultsHandler:
     @classmethod
     def _insert_index_column(cls, table, index, offset):
         """Add first column with header names and datetime / range data."""
-        index_column = deque(["" for _ in range(offset)]) + deque(index)
+        index_column = ["" for _ in range(offset)] + index
         for i, item in enumerate(index_column):
-            table[i].appendleft(item)
+            table[i].insert(0, item)
 
     @classmethod
     def convert_dict_to_table(cls, results_dictionary, explode_header):
@@ -146,15 +147,15 @@ class ResultsHandler:
 
         Returns
         -------
-        list of deque of {float, str or datetime}
+        list of list of {float, str or datetime}
             Table like nested list of lists.
 
         """
         header = results_dictionary.variables
         n_rows = len(results_dictionary[header[0]])
-        table = cls._explode_header(header) if explode_header else [deque(header)]
+        table = cls._explode_header(header) if explode_header else [header]
         for i in range(0, n_rows):
-            row = deque()
+            row = []
             for array in results_dictionary.arrays:
                 row.append(array[i])
             table.append(row)
@@ -179,7 +180,10 @@ class ResultsWriter:
 
     @classmethod
     def write_table_to_csv(cls, table, path, delimiter, **kwargs):
-        with open(path, mode="w", newline="") as csv_file:
+        open_kwargs = {"mode": "w"}
+        if sys.version_info[0] == 3:
+            open_kwargs["newline"] = ""
+        with open(path, **open_kwargs) as csv_file:
             writer = csv.writer(csv_file, delimiter=delimiter, **kwargs)
             for row in table:
                 writer.writerow(row)

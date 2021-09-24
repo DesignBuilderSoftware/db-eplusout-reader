@@ -12,9 +12,9 @@ from db_eplusout_reader.results_dict import ResultsDictionary
 @pytest.fixture(scope="function")
 def temp_csv(tmp_path):
     try:
-        yield os.path.join(tmp_path, "test.csv")
+        yield os.path.join(str(tmp_path), "test.csv")
     finally:
-        shutil.rmtree(tmp_path, ignore_errors=True)
+        shutil.rmtree(str(tmp_path), ignore_errors=True)
 
 
 @pytest.fixture(scope="session")
