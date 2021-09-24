@@ -143,4 +143,8 @@ results.arrays
 #         ...
 #     ],
 # ]
+
+# save results to comma delimited csv file, variable will be split into multiple rows
+results.to_csv(r"C:\some\path.csv", explode_header=True, delimiter=",")
+
 ```
