@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "db-eplusout-reader"
-version = "0.3.0"
+version = "0.3.1"
 description = ""
 authors = ["Vojtech Panek <vojtech.panek@designbuilder.co.uk>"]
 
