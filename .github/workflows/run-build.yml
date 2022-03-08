@@ -1,0 +1,23 @@
+# This workflow builds and uploads package.
+
+name: Package
+on:
+  push:
+    tags:
+      - v*.*.*
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  call-tests:
+    uses: voightp/github-actions/.github/workflows/run-tests.yml@master
+    with:
+      pytest-args: "tests -v"
+  call-build:
+    needs: call-tests
+    uses: voightp/github-actions/.github/workflows/run-build.yml@master
+    with:
+      matrix: "[ 'ubuntu-latest', 'windows-latest', 'macOS-latest' ]"
+      python-version: 3.9
