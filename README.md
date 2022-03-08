@@ -143,8 +143,14 @@ results.arrays
 #         ...
 #     ],
 # ]
-
-# save results to comma delimited csv file, variable will be split into multiple rows
+```
+Results can be saved to .csv using 'to_csv()' method.
+```python
+# save results as a comma delimited csv file (this is default if delimiter not specified)
+# split variable into multiple rows
 results.to_csv(r"C:\some\path.csv", explode_header=True, delimiter=",")
 
+# add some text right above the table
+# append rows to the existing file instead of replacing it
+results.to_csv(r"C:\some\path.csv", title="FIRST ROW TEXT", append=True)
 ```
