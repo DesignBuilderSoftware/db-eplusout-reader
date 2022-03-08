@@ -86,7 +86,9 @@ class ResultsDictionary(OrderedDict):
         """
         return ResultsHandler.convert_dict_to_table(self, explode_header)
 
-    def to_csv(self, path, explode_header=True, delimiter=",", **kwargs):
+    def to_csv(
+        self, path, explode_header=True, delimiter=",", append=False, title="", **kwargs
+    ):
         """
         Save results as a csv file.
 
@@ -99,6 +101,10 @@ class ResultsDictionary(OrderedDict):
             otherwise put one variable into one cell.
         delimiter : str, default ","
             Csv delimiter character.
+        append : bool, default False
+            Add results below the last row instead of replacing the .csv.
+        title : str
+            Add row with given text.
         **kwargs
             Key word arguments passed to csv writer.
 
@@ -108,7 +114,9 @@ class ResultsDictionary(OrderedDict):
 
         """
         table = ResultsHandler.convert_dict_to_table(self, explode_header)
-        ResultsWriter.write_table_to_csv(table, path, delimiter, **kwargs)
+        ResultsWriter.write_table_to_csv(
+            table, path, delimiter, append, title, **kwargs
+        )
 
 
 class ResultsHandler:
@@ -179,11 +187,15 @@ class ResultsWriter:
     """Handle results dictionary i/o operations."""
 
     @classmethod
-    def write_table_to_csv(cls, table, path, delimiter, **kwargs):
-        open_kwargs = {"mode": "w"}
+    def write_table_to_csv(cls, table, path, delimiter, append, title, **kwargs):
+        """Write given table as a .csv file."""
         if sys.version_info[0] == 3:
-            open_kwargs["newline"] = ""
+            open_kwargs = {"mode": "a" if append else "w", "newline": ""}
+        else:
+            open_kwargs = {"mode": "ab" if append else "wb"}
         with open(path, **open_kwargs) as csv_file:
             writer = csv.writer(csv_file, delimiter=delimiter, **kwargs)
+            if title:
+                writer.writerow([title])
             for row in table:
                 writer.writerow(row)
