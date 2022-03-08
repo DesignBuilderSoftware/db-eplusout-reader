@@ -10,6 +10,17 @@ from db_eplusout_reader.results_dict import ResultsDictionary, ResultsHandler
 
 
 class TestResultsDictionary:
+    @pytest.fixture(scope="function")
+    def test_results(self):
+        return [
+            ["", "Temperature", "Temperature", "Temperature"],
+            ["", "Zone2", "Zone1", "Zone3"],
+            ["", "C", "C", "C"],
+            ["2002-01-01 00:00:00", "22", "20", "19"],
+            ["2002-01-02 00:00:00", "23", "21", "23"],
+            ["2002-01-03 00:00:00", "19", "20", "20"],
+        ]
+
     def test_items(self, results_dictionary):
         assert list(results_dictionary.items()) == [
             (Variable("Temperature", "Zone2", "C"), [22, 23, 19]),
@@ -79,18 +90,30 @@ class TestResultsDictionary:
             assert len(row) == n_columns
 
     @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
-    def test_to_csv(self, results_dictionary, temp_csv, delimiter):
+    def test_to_csv(self, results_dictionary, temp_csv, delimiter, test_results):
         results_dictionary.to_csv(temp_csv, delimiter=delimiter)
         with open(temp_csv) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=delimiter)
-            assert list(csv_reader) == [
-                ["", "Temperature", "Temperature", "Temperature"],
-                ["", "Zone2", "Zone1", "Zone3"],
-                ["", "C", "C", "C"],
-                ["2002-01-01 00:00:00", "22", "20", "19"],
-                ["2002-01-02 00:00:00", "23", "21", "23"],
-                ["2002-01-03 00:00:00", "19", "20", "20"],
-            ]
+            assert list(csv_reader) == test_results
+
+    @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
+    def test_to_csv_title_row(
+        self, results_dictionary, temp_csv, delimiter, test_results
+    ):
+        results_dictionary.to_csv(temp_csv, delimiter=delimiter, title="TEST TITLE")
+        with open(temp_csv) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=delimiter)
+            assert list(csv_reader) == [["TEST TITLE"]] + test_results
+
+    @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
+    def test_to_csv_append(self, results_dictionary, temp_csv, delimiter, test_results):
+        results_dictionary.to_csv(temp_csv, delimiter=delimiter)
+        results_dictionary.to_csv(
+            temp_csv, delimiter=delimiter, append=True, title="FOO"
+        )
+        with open(temp_csv) as csv_file:
+            csv_reader = csv.reader(csv_file, delimiter=delimiter)
+            assert list(csv_reader) == test_results + [["FOO"]] + test_results
 
     @pytest.mark.parametrize(
         "explode, expected",
