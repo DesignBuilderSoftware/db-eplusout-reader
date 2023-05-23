@@ -1,5 +1,33 @@
 # db-eplusout-reader ![Tests](https://github.com/DesignBuilderSoftware/db-eplusout-reader/workflows/Tests/badge.svg)
-## A tool to fetch results from EnergyPlus output files.
+A tool to fetch results from EnergyPlus output files.
+
+Installation
+------------
+DesignBuilder does not always come with the latest pacakge release so some functionality may be missing.
+
+One of the following approaches can be used to update the reader package used in the DesignBuilder API.
+
++ ##### Wheel
+
+Download the .whl file from the [release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases).
+
+Use python to install the package to DesignBuilder python environment:
+```commandline
+python27 executable -m pip install "C:\wheel\path\db_eplusout_reader-x.x.x-py2.py3-none-any.whl" --target "C:\Program Files\Python27\Lib"
+```
+Make sure that the file name matches the downloaded package wheel.
+
++ ##### Zip
+
+Download the source code archive in .zip format (via release page link above).
+
+Go to DesignBuilder installation directory "C:\Program Files (x86)\DesignBuilder\Python27" and delete the content of the "db_eplusout_reader" folder.
+
+Open the source code archive zip archive and copy the content of the "db_eplusout_reader" folder to the original directory.
+
+
+Usage
+-----
 
 Extract requested results using 'get_results' function. Expected arguments are file path, 
 list of variables and output interval (frequency).
@@ -12,7 +40,7 @@ v = Variable(
     type="Zone Thermal Comfort Fanger Model PPD",
     units="%"
 )
-```
+
 
 When one (or multiple) 'Variable' fields would be set as None, filtering for specific part 
 of variable will not be applied.
