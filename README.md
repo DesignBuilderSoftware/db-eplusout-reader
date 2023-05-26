@@ -11,7 +11,9 @@ One of the following approaches can be used to update the reader package used in
 
 Download the .whl file from the [release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases).
 
-Use python to install the package to DesignBuilder python environment:
+Go to DesignBuilder installation directory "C:\Program Files (x86)\DesignBuilder\Python27" and delete the "db_eplusout_reader" and "db_eplusout_reader-x-x-x.dist.info" folders.
+
+Use python to install the package to DesignBuilder python environment (you may need to run the prompt in the admin mode):
 ```commandline
 python27 executable -m pip install "C:\wheel\path\db_eplusout_reader-x.x.x-py2.py3-none-any.whl" --target "C:\Program Files\Python27\Lib"
 ```
