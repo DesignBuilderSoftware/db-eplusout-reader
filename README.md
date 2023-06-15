@@ -1,9 +1,14 @@
 # db-eplusout-reader ![Tests](https://github.com/DesignBuilderSoftware/db-eplusout-reader/workflows/Tests/badge.svg)
 A tool to fetch results from EnergyPlus output files.
 
+DesignBuilder package version
+---------------------
++ DesignBuilder < v7.2.0.028  | db-eplusout-reader 0.2.0
++ DesignBuilder >= v7.2.0.028 | db-eplusout-reader 0.3.1
+
 Installation
 ------------
-DesignBuilder does not always come with the latest pacakge release so some functionality may be missing.
+Since DesignBuilder does not always come with the latest pacakge release, some functionality may be missing.
 
 One of the following approaches can be used to update the reader package used in the DesignBuilder API.
 
