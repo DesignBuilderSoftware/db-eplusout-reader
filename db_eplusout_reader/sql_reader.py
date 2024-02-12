@@ -1,3 +1,4 @@
+import os.path
 import sqlite3
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -252,6 +253,8 @@ def get_results_from_sql(
     ResultsDictionary : Dict of {Variable, list of float}
 
     """
+    if not os.path.exists(path):
+        raise IOError("Cannot read results, file '{}' does not exist.".format(path))
     conn = sqlite3.connect(path)
     variables = [variables] if isinstance(variables, Variable) else variables
     sql_frequency = to_sql_frequency(frequency)

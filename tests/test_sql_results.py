@@ -1,4 +1,7 @@
+import os.path
 from datetime import datetime
+
+import pytest
 
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, D, H, M
@@ -100,3 +103,12 @@ class TestSql:
             sql_path, Variable(None, None, None), frequency=M
         )
         assert ResultsHandler.get_table_shape(results_dictionary.to_table()) == (15, 36)
+
+    def test_invalid_file_path(self, test_files_dir):
+        variable = Variable(
+            "PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PPD", "%"
+        )
+        invalid_path = os.path.join(test_files_dir, "invalid_file.sql")
+        with pytest.raises(IOError):
+            get_results(invalid_path, variables=variable, frequency=H)
+        assert not os.path.exists(invalid_path)

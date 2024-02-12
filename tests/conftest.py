@@ -18,13 +18,18 @@ def temp_csv(tmp_path):
 
 
 @pytest.fixture(scope="session")
-def sql_path():
-    return os.path.join(os.path.dirname(__file__), "test_files", "eplusout.sql")
+def test_files_dir():
+    return os.path.dirname(__file__)
 
 
 @pytest.fixture(scope="session")
-def eso_path():
-    return os.path.join(os.path.dirname(__file__), "test_files", "eplusout.eso")
+def sql_path(test_files_dir):
+    return os.path.join(test_files_dir, "test_files", "eplusout.sql")
+
+
+@pytest.fixture(scope="session")
+def eso_path(test_files_dir):
+    return os.path.join(test_files_dir, "test_files", "eplusout.eso")
 
 
 @pytest.fixture(scope="session")
