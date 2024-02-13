@@ -35,7 +35,7 @@ class ResultsDictionary(OrderedDict):
     """
 
     def __init__(self, frequency=""):
-        super(ResultsDictionary, self).__init__()
+        super(ResultsDictionary, self).__init__()  # noqa: R1725
         self.frequency = frequency
         self.time_series = None
 
