@@ -15,9 +15,10 @@ jobs:
     uses: voightp/github-actions/.github/workflows/run-tests.yml@master
     with:
       pytest-args: "tests -v"
+      python-version: "3.10"
   call-build:
     needs: call-tests
     uses: voightp/github-actions/.github/workflows/run-build.yml@master
     with:
       matrix: "[ 'ubuntu-latest', 'windows-latest', 'macOS-latest' ]"
-      python-version: 3.9
+      python-version: "3.10"
