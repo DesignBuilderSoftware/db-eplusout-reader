@@ -1,3 +1,4 @@
+import os.path
 import sqlite3
 from collections import OrderedDict
 from datetime import datetime, timedelta
@@ -58,8 +59,8 @@ def data_dict_statement(columns, alike):
         "SELECT ReportDataDictionaryIndex, ReportingFrequency, KeyValue, Name, Units"
         " FROM ReportDataDictionary WHERE ReportingFrequency =?"
     )
-    eq_operater = " LIKE ?" if alike else "=?"
-    conditions = [column + eq_operater for column in columns]
+    eq_operator = " LIKE ?" if alike else "=?"
+    conditions = [column + eq_operator for column in columns]
     if conditions:
         statement += "AND " + "AND ".join(conditions)
     return statement
@@ -86,7 +87,7 @@ def fetch_data_dict_rows(conn, variable, sql_frequency, alike):
 
 
 def to_string(unicode_variable):
-    """Convert 'variable unicode field names to string field names."""
+    """Convert variable unicode field names to string field names."""
     return Variable(*map(lambda x: str(x), unicode_variable))
 
 
@@ -173,7 +174,7 @@ def dates_statement(frequency):
 
 
 def parse_sql_timestamp(time_row):
-    """Convert EnerguPlus timestamp to standard datetime."""
+    """Convert EnergyPlus timestamp to standard datetime."""
     interval, year, month, day, hour, minute = time_row
     year = 2002 if (year == 0 or year is None) else year
 
@@ -241,7 +242,7 @@ def get_results_from_sql(
         An output interval, this can be one of {TS, H, D, M, A, RP} constants.
     alike : default False, bool
         Specify if full string or only part of variable attribute
-        needs to match, it's case insensitive in both cases.
+        needs to match, it's case-insensitive in both cases.
     start_date : default None, datetime.datetime
         Lower datetime interval boundary, inclusive.
     end_date : default None, datetime.datetime
@@ -252,6 +253,8 @@ def get_results_from_sql(
     ResultsDictionary : Dict of {Variable, list of float}
 
     """
+    if not os.path.exists(path):
+        raise IOError("Cannot read results, file '{}' does not exist.".format(path))
     conn = sqlite3.connect(path)
     variables = [variables] if isinstance(variables, Variable) else variables
     sql_frequency = to_sql_frequency(frequency)
