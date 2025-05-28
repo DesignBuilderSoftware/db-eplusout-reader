@@ -32,7 +32,17 @@ Go to DesignBuilder installation directory "C:\Program Files (x86)\DesignBuilder
 
 Open the source code archive zip archive and copy the content of the "db_eplusout_reader" folder to the original directory.
 
++ ##### Standalone Python environment
 
+To install the latest version of the package into a local Python evnrionment, use the following command (the package is not available on PyPi):
+
+```commandline
+pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
+```
+Version can be specified by addong the version identifier:
+```commandline
+pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git@v0.3.2
+```
 Usage
 -----
 
