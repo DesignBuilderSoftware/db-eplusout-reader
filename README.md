@@ -39,7 +39,7 @@ To install the latest version of the package into a local Python evnrionment, us
 ```commandline
 pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
 ```
-Version can be specified by addong the version identifier:
+Version can be specified by adding the version identifier:
 ```commandline
 pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git@v0.3.2
 ```
