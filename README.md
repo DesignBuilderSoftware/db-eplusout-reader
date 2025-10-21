@@ -87,7 +87,7 @@ from db_eplusout_reader.constants import D
 
 
 variables = [
-     Variable("", "Electricity:Facility", "J"), # standard meter
+     Variable(None, "Electricity:Facility", "J"), # standard meter
      Variable("Cumulative", "Electricity:Facility", "J"), # cumulative meter
      Variable(None, None, None), # get all outputs
      Variable("PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
@@ -130,7 +130,7 @@ from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import M
 
 variables = [
-    Variable("", "Electricity:Facility", "J"),
+    Variable(None, "Electricity:Facility", "J"),
     Variable("PEOPLE BLOCK1:ZONE1", "Zone Thermal Comfort Fanger Model PMV", ""),
     Variable("PEOPLE BLOCK1:ZONE2", "Zone Thermal Comfort Fanger Model PMV", ""),
 ]
