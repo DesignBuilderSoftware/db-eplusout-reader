@@ -7,7 +7,11 @@ the file is truncated before the 'End of Data' marker.
 
 import pytest
 
-from db_eplusout_reader.exceptions import BlankLineError, IncompleteFile, InvalidLineSyntax
+from db_eplusout_reader.exceptions import (
+    BlankLineError,
+    IncompleteFile,
+    InvalidLineSyntax,
+)
 from db_eplusout_reader.processing.esofile_reader import process_eso_file
 
 _HEADER = (
@@ -33,17 +37,13 @@ _VALID_BODY = (
 class TestEsofileReaderErrors:
     def test_blank_line_in_header(self, tmp_path):
         eso = tmp_path / "blank_header.eso"
-        eso.write_text(
-            _HEADER + "\n"  # should trigger BlankLineError
-        )
+        eso.write_text(_HEADER + "\n")  # should trigger BlankLineError
         with pytest.raises(BlankLineError):
             process_eso_file(str(eso))
 
     def test_invalid_syntax_in_header(self, tmp_path):
         eso = tmp_path / "bad_header.eso"
-        eso.write_text(
-            _HEADER + "THIS IS NOT VALID SYNTAX AT ALL\n"  # no regex match
-        )
+        eso.write_text(_HEADER + "THIS IS NOT VALID SYNTAX AT ALL\n")  # no regex match
         with pytest.raises(InvalidLineSyntax):
             process_eso_file(str(eso))
 

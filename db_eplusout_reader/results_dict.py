@@ -115,7 +115,9 @@ class ResultsDictionary(OrderedDict):
 
         """
         table = ResultsHandler.convert_dict_to_table(self, explode_header)
-        ResultsWriter.write_table_to_csv(table, path, delimiter, append, title, **kwargs)
+        ResultsWriter.write_table_to_csv(
+            table, path, delimiter, append, title, **kwargs
+        )
 
 
 class ResultsHandler:

@@ -55,7 +55,9 @@ class TestResultsDictionary:
         assert results_dictionary.first_array == [22, 23, 19]
 
     def test_first_variable(self, results_dictionary):
-        assert results_dictionary.first_variable == Variable("Temperature", "Zone2", "C")
+        assert results_dictionary.first_variable == Variable(
+            "Temperature", "Zone2", "C"
+        )
 
     def test_variables(self, results_dictionary):
         assert results_dictionary.variables == [
@@ -77,14 +79,18 @@ class TestResultsDictionary:
     def test_frequency(self, results_dictionary):
         assert results_dictionary.frequency == H
 
-    @pytest.mark.parametrize("explode, n_rows, n_columns", [(True, 6, 4), (False, 4, 4)])
+    @pytest.mark.parametrize(
+        "explode, n_rows, n_columns", [(True, 6, 4), (False, 4, 4)]
+    )
     def test_to_table(self, results_dictionary, explode, n_rows, n_columns):
         table = results_dictionary.to_table(explode_header=explode)
         assert len(table) == n_rows
         for row in table:
             assert len(row) == n_columns
 
-    @pytest.mark.parametrize("explode, n_rows, n_columns", [(True, 6, 3), (False, 4, 3)])
+    @pytest.mark.parametrize(
+        "explode, n_rows, n_columns", [(True, 6, 3), (False, 4, 3)]
+    )
     def test_to_table_no_index(self, results_dictionary, explode, n_rows, n_columns):
         results_dictionary.time_series = None
         table = results_dictionary.to_table(explode_header=explode)
@@ -100,7 +106,9 @@ class TestResultsDictionary:
             assert list(csv_reader) == test_results
 
     @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
-    def test_to_csv_title_row(self, results_dictionary, temp_csv, delimiter, test_results):
+    def test_to_csv_title_row(
+        self, results_dictionary, temp_csv, delimiter, test_results
+    ):
         results_dictionary.to_csv(temp_csv, delimiter=delimiter, title="TEST TITLE")
         with open(temp_csv) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=delimiter)
@@ -109,7 +117,9 @@ class TestResultsDictionary:
     @pytest.mark.parametrize("delimiter", [",", ";", "\t", " "])
     def test_to_csv_append(self, results_dictionary, temp_csv, delimiter, test_results):
         results_dictionary.to_csv(temp_csv, delimiter=delimiter)
-        results_dictionary.to_csv(temp_csv, delimiter=delimiter, append=True, title="FOO")
+        results_dictionary.to_csv(
+            temp_csv, delimiter=delimiter, append=True, title="FOO"
+        )
         with open(temp_csv) as csv_file:
             csv_reader = csv.reader(csv_file, delimiter=delimiter)
             assert list(csv_reader) == test_results + [["FOO"]] + test_results
@@ -144,7 +154,9 @@ class TestResultsDictionary:
             ),
         ],
     )
-    def test_to_csv_explode_header(self, results_dictionary, temp_csv, explode, expected):
+    def test_to_csv_explode_header(
+        self, results_dictionary, temp_csv, explode, expected
+    ):
         results_dictionary.to_csv(temp_csv, explode_header=explode)
         with open(temp_csv) as csv_file:
             csv_reader = csv.reader(csv_file)

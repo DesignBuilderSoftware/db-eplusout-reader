@@ -120,7 +120,9 @@ class DBEsoFile:
         order = {TS: 0, H: 1, D: 2, M: 3, A: 4, RP: 5}
         return sorted(list(self.header.keys()), key=lambda x: order[x])
 
-    def get_results(self, variables, frequency, alike=False, start_date=None, end_date=None):
+    def get_results(
+        self, variables, frequency, alike=False, start_date=None, end_date=None
+    ):
         """
         Extract results from the parsed ESO file data.
 

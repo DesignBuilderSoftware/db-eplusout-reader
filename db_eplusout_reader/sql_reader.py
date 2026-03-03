@@ -155,9 +155,7 @@ def get_sliced_outputs(conn, id_, start_date, end_date):
 
 def get_outputs(conn, id_):
     """Get array of output values for given variable id."""
-    statement = (
-        "SELECT ReportData.Value FROM ReportData WHERE ReportData.ReportDataDictionaryIndex = ?"
-    )
+    statement = "SELECT ReportData.Value FROM ReportData WHERE ReportData.ReportDataDictionaryIndex = ?"
     return [r[0] for r in conn.execute(statement, (id_,))]
 
 

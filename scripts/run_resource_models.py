@@ -9,8 +9,7 @@ eppy stores the active IDD as a class-level attribute; a single process can only
 one IDD at a time.
 
 Run both scripts to compare simulation times:
-    uv run python scripts/run_resource_models.py       # eppy (parallel)
-    uv run python scripts/run_resource_models_eppy.py  # eppy (serial)
+    uv run python scripts/run_resource_models.py
 """
 
 from __future__ import annotations
@@ -109,7 +108,9 @@ def main() -> None:
         sys.exit(1)
 
     total_jobs = sum(len(v) for v in groups.values())
-    print(f"Running {total_jobs} simulations across {len(groups)} EnergyPlus version(s)")
+    print(
+        f"Running {total_jobs} simulations across {len(groups)} EnergyPlus version(s)"
+    )
     print(f"using {os.cpu_count()} CPUs …\n")
 
     # runIDFs creates/removes a 'multi_runs/' dir relative to cwd.
