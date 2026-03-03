@@ -1,10 +1,7 @@
-import os
 from datetime import datetime
 
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, D, H, M
-
-ESO_PATH = os.path.join(os.path.dirname(__file__), "test_files", "eplusout.eso")
 
 
 class TestEsofileReader:
