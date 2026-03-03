@@ -11,8 +11,8 @@ from datetime import datetime
 import pytest
 
 from db_eplusout_reader import Variable, get_results
-from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
 from db_eplusout_reader.constants import RP, D, H, M
+from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
 
 
 class TestEsofileReader:

@@ -13,7 +13,12 @@ import pytest
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.results_dict import ResultsHandler
-from db_eplusout_reader.sql_reader import get_timestamps_from_sql, to_eso_frequency, to_sql_frequency, validate_time
+from db_eplusout_reader.sql_reader import (
+    get_timestamps_from_sql,
+    to_eso_frequency,
+    to_sql_frequency,
+    validate_time,
+)
 
 
 class TestSql:
