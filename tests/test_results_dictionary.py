@@ -6,6 +6,7 @@ and without exploded headers, to_csv with various delimiters / append /
 title / explode_header combinations, and ResultsHandler.get_table_shape
 including the InvalidShape error path.
 """
+
 import csv
 from datetime import datetime
 

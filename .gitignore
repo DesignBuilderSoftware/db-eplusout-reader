@@ -138,3 +138,5 @@ dmypy.json
 
 # EnergyPlus simulation outputs
 resources/output/
+*.eso
+*.sql

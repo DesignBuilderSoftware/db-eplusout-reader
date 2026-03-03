@@ -13,7 +13,6 @@ TEST_FILES_DIR = Path(__file__).parent / "test_files"
 
 # Versioned file stems present in test_files/
 ESO_STEMS = [
-    "920_eplusout",
     "231_1ZoneUncontrolled",
     "251_1ZoneUncontrolled",
     "252_1ZoneUncontrolled",
@@ -36,23 +35,24 @@ def test_files_dir():
 
 # ---------------------------------------------------------------------------
 # Single-file fixtures used by tests that rely on specific variables in the
-# 920 multi-zone model
+# 231_1ZoneUncontrolled model
 # ---------------------------------------------------------------------------
 
 
 @pytest.fixture(scope="session")
 def sql_path():
-    return str(TEST_FILES_DIR / "920_eplusout.sql")
+    return str(TEST_FILES_DIR / "231_1ZoneUncontrolled.sql")
 
 
 @pytest.fixture(scope="session")
 def eso_path():
-    return str(TEST_FILES_DIR / "920_eplusout.eso")
+    return str(TEST_FILES_DIR / "231_1ZoneUncontrolled.eso")
 
 
 @pytest.fixture(scope="session")
 def session_eso_file(eso_path):
-    return DBEsoFile.from_path(eso_path)
+    col = DBEsoFileCollection.from_path(eso_path)
+    return next(f for f in col if "RUN" in f.environment_name.upper())
 
 
 @pytest.fixture(scope="session")

@@ -7,6 +7,7 @@ shortcut, year-match search, ValueError when nothing matches), and the
 convert_raw_date_data branch that uses a default year of 2002 for
 monthly-only data.
 """
+
 import pytest
 
 from db_eplusout_reader.constants import RP, A, M
