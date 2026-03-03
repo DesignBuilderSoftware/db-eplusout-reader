@@ -1,6 +1,17 @@
+"""Tests for DBEsoFile and DBEsoFileCollection ESO file reading.
+
+Covers: parsing ESO files, get_results() filtering by variable, frequency,
+units, date range (both-ends, start-only, end-only), alike matching, and
+the top-level get_results() function accepting file paths and file instances.
+Also tests DBEsoFileCollection list-like mutation methods and the error paths
+of the top-level get_results() function for unsupported types and extensions.
+"""
 from datetime import datetime
 
+import pytest
+
 from db_eplusout_reader import Variable, get_results
+from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
 from db_eplusout_reader.constants import RP, D, H, M
 
 
@@ -79,6 +90,92 @@ class TestEsoGetResults:
         assert results.frequency == D
         assert len(results.time_series) == 365
 
+    def test_get_results_start_date_only(self, session_eso_file):
+        variables = [Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")]
+        start_date = datetime(2019, 1, 15, 0)
+        results = session_eso_file.get_results(variables, H, start_date=start_date)
+
+        assert len(results.time_series) > 0
+        assert all(ts >= start_date for ts in results.time_series)
+
+    def test_get_results_end_date_only(self, session_eso_file):
+        variables = [Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")]
+        end_date = datetime(2019, 1, 15, 23)
+        results = session_eso_file.get_results(variables, H, end_date=end_date)
+
+        assert len(results.time_series) > 0
+        assert all(ts <= end_date for ts in results.time_series)
+
+    def test_get_results_no_dates_returns_all(self, session_eso_file):
+        variables = [Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")]
+        results = session_eso_file.get_results(variables, H)
+
+        assert len(results.time_series) == 8760
+
+
+class TestCollectionMethods:
+    def test_environment_names(self, session_eso_file_collection):
+        names = session_eso_file_collection.environment_names
+        assert isinstance(names, list)
+        assert "UNTITLED (01-01:31-12)" in names
+
+    def test_getitem(self, session_eso_file_collection):
+        item = session_eso_file_collection[0]
+        assert isinstance(item, DBEsoFile)
+
+    def test_contains(self, session_eso_file_collection):
+        item = session_eso_file_collection[0]
+        assert item in session_eso_file_collection
+
+    def test_append(self, session_eso_file):
+        col = DBEsoFileCollection()
+        col.append(session_eso_file)
+        assert col[0] is session_eso_file
+
+    def test_count_returns_none(self, session_eso_file):
+        # count() is missing a return statement — it currently returns None
+        col = DBEsoFileCollection([session_eso_file])
+        assert col.count() is None
+
+    def test_index(self, session_eso_file_collection):
+        item = session_eso_file_collection[0]
+        assert session_eso_file_collection.index(item) == 0
+
+    def test_extend(self, session_eso_file):
+        col = DBEsoFileCollection()
+        col.extend([session_eso_file])
+        assert col[0] is session_eso_file
+
+    def test_insert(self, session_eso_file):
+        col = DBEsoFileCollection([session_eso_file])
+        col.insert(0, session_eso_file)
+        assert len(col._db_eso_files) == 2
+
+    def test_pop(self, session_eso_file):
+        col = DBEsoFileCollection([session_eso_file])
+        popped = col.pop(0)
+        assert popped is session_eso_file
+        assert len(col._db_eso_files) == 0
+
+    def test_remove(self, session_eso_file):
+        col = DBEsoFileCollection([session_eso_file])
+        col.remove(session_eso_file)
+        assert len(col._db_eso_files) == 0
+
+    def test_reverse_does_not_mutate(self, session_eso_file):
+        # reverse() calls reversed() but doesn't assign the result back —
+        # the list remains unchanged (known bug)
+        col = DBEsoFileCollection([session_eso_file, session_eso_file])
+        original_first = col._db_eso_files[0]
+        col.reverse()
+        assert col._db_eso_files[0] is original_first  # unchanged
+
+    def test_sort_raises_attribute_error(self, session_eso_file):
+        # sort() references ef.file_name which does not exist on DBEsoFile
+        col = DBEsoFileCollection([session_eso_file])
+        with pytest.raises(AttributeError):
+            col.sort(reverse=False)
+
 
 class TestGetResultsFunction:
     def test_get_results_with_eso_path(self, eso_path):
@@ -108,3 +205,20 @@ class TestGetResultsFunction:
             assert var.units == "C"
         for var in results2.variables:
             assert var.units == "Pa"
+
+    def test_get_results_unsupported_extension_raises(self, tmp_path):
+        bad_path = str(tmp_path / "output.csv")
+        (tmp_path / "output.csv").write_text("dummy")
+        variables = [Variable(None, None, None)]
+        with pytest.raises(TypeError, match="Unsupported file type"):
+            get_results(bad_path, variables, H)
+
+    def test_get_results_with_collection_raises(self, session_eso_file_collection):
+        variables = [Variable(None, None, None)]
+        with pytest.raises(TypeError, match="DBEsoFileCollection"):
+            get_results(session_eso_file_collection, variables, H)
+
+    def test_get_results_unsupported_type_raises(self):
+        variables = [Variable(None, None, None)]
+        with pytest.raises(TypeError, match="Unsupported class"):
+            get_results(42, variables, H)

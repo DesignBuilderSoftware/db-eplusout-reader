@@ -1,12 +1,19 @@
+"""Tests for SQL output file reading via get_results() and sql_reader internals.
+
+Covers: exact-match / alike / all-variable queries, date-range slicing,
+meter results, time-series length across all frequencies (RP/M/D/H), the
+get_timestamps_from_sql helper, IOError for missing files, and internal
+helpers to_eso_frequency, to_sql_frequency, and validate_time.
+"""
 import os.path
 from datetime import datetime
 
 import pytest
 
 from db_eplusout_reader import Variable, get_results
-from db_eplusout_reader.constants import RP, D, H, M
+from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.results_dict import ResultsHandler
-from db_eplusout_reader.sql_reader import get_timestamps_from_sql
+from db_eplusout_reader.sql_reader import get_timestamps_from_sql, to_eso_frequency, to_sql_frequency, validate_time
 
 
 class TestSql:
@@ -94,3 +101,41 @@ class TestSql:
         with pytest.raises(IOError):
             get_results(invalid_path, variables=variable, frequency=H)
         assert not os.path.exists(invalid_path)
+
+
+class TestSqlInternals:
+    def test_to_eso_frequency_all(self):
+        assert to_eso_frequency("Zone Timestep") == TS
+        assert to_eso_frequency("Hourly") == H
+        assert to_eso_frequency("Daily") == D
+        assert to_eso_frequency("Monthly") == M
+        assert to_eso_frequency("Run Period") == RP
+        assert to_eso_frequency("Annual") == A
+        assert to_eso_frequency("HVAC System Timestep") == TS
+
+    def test_to_sql_frequency_none(self):
+        assert to_sql_frequency(None) is None
+
+    def test_to_sql_frequency_all(self):
+        assert to_sql_frequency(TS) == "Zone Timestep"
+        assert to_sql_frequency(H) == "Hourly"
+        assert to_sql_frequency(D) == "Daily"
+        assert to_sql_frequency(M) == "Monthly"
+        assert to_sql_frequency(RP) == "Run Period"
+        assert to_sql_frequency(A) == "Annual"
+
+    def test_validate_time_start_only(self):
+        ts = datetime(2013, 5, 15, 12)
+        start = datetime(2013, 5, 1)
+        assert validate_time(ts, start, None) is True
+        assert validate_time(datetime(2013, 4, 30), start, None) is False
+
+    def test_validate_time_end_only(self):
+        ts = datetime(2013, 5, 15, 12)
+        end = datetime(2013, 5, 31)
+        assert validate_time(ts, None, end) is True
+        assert validate_time(datetime(2013, 6, 1), None, end) is False
+
+    def test_validate_time_neither(self):
+        ts = datetime(2013, 5, 15, 12)
+        assert validate_time(ts, None, None) is True
