@@ -1,6 +1,6 @@
 # db-eplusout-reader
 
-![Tests](https://github.com/Tokarzewski/db-eplusout-reader/workflows/Tests/badge.svg)
+![Tests](https://github.com/DesignBuilderSoftware/db-eplusout-reader/workflows/Tests/badge.svg)
 ![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13%20%7C%203.14-blue)
 
 A tool to fetch results from EnergyPlus output files (`.sql` and `.eso` formats).
