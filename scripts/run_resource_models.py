@@ -64,7 +64,7 @@ def main() -> None:
         try:
             ep_dir = find_energyplus_dir(idf_path)
             if ep_dir is None:
-                print(f"       SKIP  (no EnergyPlus installation found)")
+                print("       SKIP  (no EnergyPlus installation found)")
                 continue
 
             set_idd(ep_dir)
