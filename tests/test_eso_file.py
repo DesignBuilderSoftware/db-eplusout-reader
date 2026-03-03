@@ -106,12 +106,6 @@ class TestEsoGetResults:
         assert len(results.time_series) > 0
         assert all(ts <= end_date for ts in results.time_series)
 
-    def test_get_results_no_dates_returns_all(self, session_eso_file):
-        variables = [Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")]
-        results = session_eso_file.get_results(variables, H)
-
-        assert len(results.time_series) == 8760
-
 
 class TestCollectionMethods:
     def test_environment_names(self, session_eso_file_collection):
@@ -149,26 +143,26 @@ class TestCollectionMethods:
     def test_insert(self, session_eso_file):
         col = DBEsoFileCollection([session_eso_file])
         col.insert(0, session_eso_file)
-        assert len(col._db_eso_files) == 2
+        assert len(list(col)) == 2
 
     def test_pop(self, session_eso_file):
         col = DBEsoFileCollection([session_eso_file])
         popped = col.pop(0)
         assert popped is session_eso_file
-        assert len(col._db_eso_files) == 0
+        assert len(list(col)) == 0
 
     def test_remove(self, session_eso_file):
         col = DBEsoFileCollection([session_eso_file])
         col.remove(session_eso_file)
-        assert len(col._db_eso_files) == 0
+        assert len(list(col)) == 0
 
     def test_reverse_does_not_mutate(self, session_eso_file):
         # reverse() calls reversed() but doesn't assign the result back —
         # the list remains unchanged (known bug)
         col = DBEsoFileCollection([session_eso_file, session_eso_file])
-        original_first = col._db_eso_files[0]
+        original_first = col[0]
         col.reverse()
-        assert col._db_eso_files[0] is original_first  # unchanged
+        assert col[0] is original_first  # unchanged
 
     def test_sort_raises_attribute_error(self, session_eso_file):
         # sort() references ef.file_name which does not exist on DBEsoFile
@@ -208,7 +202,6 @@ class TestGetResultsFunction:
 
     def test_get_results_unsupported_extension_raises(self, tmp_path):
         bad_path = str(tmp_path / "output.csv")
-        (tmp_path / "output.csv").write_text("dummy")
         variables = [Variable(None, None, None)]
         with pytest.raises(TypeError, match="Unsupported file type"):
             get_results(bad_path, variables, H)

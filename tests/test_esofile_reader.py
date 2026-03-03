@@ -34,16 +34,8 @@ class TestEsofileReaderErrors:
     def test_blank_line_in_header(self, tmp_path):
         eso = tmp_path / "blank_header.eso"
         eso.write_text(
-            "Program Version,EnergyPlus, Version 9.2.0-921312fa1d, YMD=2020.11.10 11:31\n"
-            "1,5,Environment Title[],Latitude[deg],Longitude[deg],Time Zone[],Elevation[m]\n"
-            "2,8,Day of Simulation[],Month[],Day of Month[],DST Indicator[1=yes 0=no],"
-            "Hour[],StartMinute[],EndMinute[],DayType\n"
-            "3,5,Cumulative Day of Simulation[],Month[],Day of Month[],"
-            "DST Indicator[1=yes 0=no],DayType  ! When Daily Report Variables Requested\n"
-            "4,2,Cumulative Days of Simulation[],Month[]  ! When Monthly Report Variables Requested\n"
-            "5,1,Cumulative Days of Simulation[] ! When Run Period Report Variables Requested\n"
-            "6,1,Calendar Year of Simulation[] ! When Annual Report Variables Requested\n"
-            "\n"  # blank line inside header — should trigger BlankLineError
+            _HEADER
+            + "\n"  # blank line inside header — should trigger BlankLineError
         )
         with pytest.raises(BlankLineError):
             process_eso_file(str(eso))
@@ -51,16 +43,8 @@ class TestEsofileReaderErrors:
     def test_invalid_syntax_in_header(self, tmp_path):
         eso = tmp_path / "bad_header.eso"
         eso.write_text(
-            "Program Version,EnergyPlus, Version 9.2.0-921312fa1d, YMD=2020.11.10 11:31\n"
-            "1,5,Environment Title[],Latitude[deg],Longitude[deg],Time Zone[],Elevation[m]\n"
-            "2,8,Day of Simulation[],Month[],Day of Month[],DST Indicator[1=yes 0=no],"
-            "Hour[],StartMinute[],EndMinute[],DayType\n"
-            "3,5,Cumulative Day of Simulation[],Month[],Day of Month[],"
-            "DST Indicator[1=yes 0=no],DayType  ! When Daily Report Variables Requested\n"
-            "4,2,Cumulative Days of Simulation[],Month[]  ! When Monthly Report Variables Requested\n"
-            "5,1,Cumulative Days of Simulation[] ! When Run Period Report Variables Requested\n"
-            "6,1,Calendar Year of Simulation[] ! When Annual Report Variables Requested\n"
-            "THIS IS NOT VALID SYNTAX AT ALL\n"  # invalid — no regex match, not End of Data Dictionary
+            _HEADER
+            + "THIS IS NOT VALID SYNTAX AT ALL\n"  # no regex match, not End of Data Dictionary
         )
         with pytest.raises(InvalidLineSyntax):
             process_eso_file(str(eso))

@@ -70,10 +70,10 @@ class TestCheckYearIncrement:
         ts2 = EsoTimestamp(6, 15, 0, 0)
         assert check_year_increment(ts1, ts2) is False
 
-    def test_same_month_day_no_increment(self):
+    def test_same_month_day_equal_objects_triggers_increment(self):
+        # Two distinct objects with equal values: first >= current is True, so increment is signalled
         ts1 = EsoTimestamp(3, 15, 0, 0)
         ts2 = EsoTimestamp(3, 15, 0, 0)
-        # Different objects but equal values: first >= current is True
         assert check_year_increment(ts1, ts2) is True
 
     def test_year_boundary_returns_true(self):
