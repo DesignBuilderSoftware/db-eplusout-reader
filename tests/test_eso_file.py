@@ -90,6 +90,20 @@ class TestEsoGetResults:
         assert results.frequency == D
         assert len(results.time_series) == 365
 
+    def test_get_results_monthly_frequency(self, session_eso_file):
+        variables = [Variable(None, None, None)]
+        results = session_eso_file.get_results(variables, M)
+
+        assert results.frequency == M
+        assert len(results.time_series) == 12
+
+    def test_get_results_run_period_frequency(self, session_eso_file):
+        variables = [Variable(None, None, None)]
+        results = session_eso_file.get_results(variables, RP)
+
+        assert results.frequency == RP
+        assert len(results.time_series) == 1
+
     def test_get_results_start_date_only(self, session_eso_file):
         start_date = datetime(2019, 1, 15, 0)
         results = session_eso_file.get_results([_DRYBULB], H, start_date=start_date)
