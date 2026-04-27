@@ -1,3 +1,12 @@
+"""Tests for ResultsDictionary and ResultsHandler utilities.
+
+Covers: all ResultsDictionary properties (items, scalar, first_array,
+first_variable, variables, arrays, time_series, frequency), to_table with
+and without exploded headers, to_csv with various delimiters / append /
+title / explode_header combinations, and ResultsHandler.get_table_shape
+including the InvalidShape error path.
+"""
+
 import csv
 from datetime import datetime
 

@@ -135,3 +135,8 @@ dmypy.json
 
 # AI files
 .claude
+
+# EnergyPlus simulation outputs
+resources/output/
+*.eso
+*.sql
