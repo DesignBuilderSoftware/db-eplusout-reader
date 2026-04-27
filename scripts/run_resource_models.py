@@ -108,9 +108,7 @@ def main() -> None:
         sys.exit(1)
 
     total_jobs = sum(len(v) for v in groups.values())
-    print(
-        f"Running {total_jobs} simulations across {len(groups)} EnergyPlus version(s)"
-    )
+    print(f"Running {total_jobs} simulations across {len(groups)} EnergyPlus version(s)")
     print(f"using {os.cpu_count()} CPUs …\n")
 
     # runIDFs creates/removes a 'multi_runs/' dir relative to cwd.

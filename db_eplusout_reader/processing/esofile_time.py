@@ -109,9 +109,7 @@ def update_start_dates(dates):
     if timestep_to_monthly_dates:
         for frequency in (M, A, RP):
             if frequency in dates:
-                dates[frequency] = set_start_date(
-                    dates[frequency], timestep_to_monthly_dates
-                )
+                dates[frequency] = set_start_date(dates[frequency], timestep_to_monthly_dates)
     return dates
 
 
@@ -135,17 +133,13 @@ def validate_year(year, is_leap, date, day):
             "WinterDesignDay",
         ):
             max_year = datetime.now().year + 10  # give some choices from future
-            suitable_years = get_allowed_years(
-                is_leap, date, day, max_year, n_samples=3
-            )
+            suitable_years = get_allowed_years(is_leap, date, day, max_year, n_samples=3)
             formatted_day = test_datetime.strftime("%Y-%m-%d")
             raise StartDayMismatch(
                 "Start day '{}' for given day '{}'"
                 " does not correspond to real calendar day '{}'!"
                 "\nEither set 'year' kwarg as 'None' to identify year automatically"
-                " or use one of '{}'.".format(
-                    day, formatted_day, test_day, suitable_years
-                )
+                " or use one of '{}'.".format(day, formatted_day, test_day, suitable_years)
             )
     else:
         raise LeapYearMismatch(

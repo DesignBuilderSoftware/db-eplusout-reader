@@ -87,25 +87,19 @@ class TestSql:
         assert all(isinstance(ts, datetime) for ts in timestamps)
 
     def test_get_results_meter(self, sql_path):
-        variable = Variable(
-            "ZONE ONE", "Zone Other Equipment Total Heating Energy", "J"
-        )
+        variable = Variable("ZONE ONE", "Zone Other Equipment Total Heating Energy", "J")
         results = get_results(sql_path, variables=variable, frequency=RP)
         assert len(results) == 1
         assert len(list(results.values())[0]) > 0
 
     def test_results_time_series(self, sql_path):
-        variable = Variable(
-            "ZONE ONE", "Zone Other Equipment Total Heating Energy", "J"
-        )
+        variable = Variable("ZONE ONE", "Zone Other Equipment Total Heating Energy", "J")
         for frequency, expected in zip([RP, M, D, H], [3, 14, 367, 8808]):
             results_dictionary = get_results(sql_path, variable, frequency=frequency)
             assert len(results_dictionary.time_series) == expected
 
     def test_results_to_csv(self, sql_path):
-        results_dictionary = get_results(
-            sql_path, Variable(None, None, None), frequency=M
-        )
+        results_dictionary = get_results(sql_path, Variable(None, None, None), frequency=M)
         rows, cols = ResultsHandler.get_table_shape(results_dictionary.to_table())
         n_vars = len(results_dictionary)
         n_times = len(results_dictionary.time_series)

@@ -10,9 +10,7 @@ from db_eplusout_reader.constants import D, H, M
 
 class TestEsoAcrossVersions:
     def test_get_results_hourly(self, any_eso_file):
-        variables = [
-            Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")
-        ]
+        variables = [Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")]
         results = any_eso_file.get_results(variables, H)
         assert len(results) == 1
         assert len(results.first_array) == 8760
