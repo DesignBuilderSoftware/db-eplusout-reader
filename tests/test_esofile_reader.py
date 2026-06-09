@@ -71,3 +71,47 @@ class TestEsofileReaderErrors:
         result = process_eso_file(str(eso))
         assert len(result) == 1
         assert result[0].environment_name == "TEST ENV"
+
+
+class TestScheduleReference:
+    """Variables reported under a schedule carry a trailing schedule name in
+    the dictionary line, e.g. '... [C] !Hourly,ON'. When the same variable is
+    reported both with and without a schedule the two dictionary lines collapse
+    to one Variable, but both ids still appear in the body. This used to raise
+    KeyError (issue #19); every id must be registered in the output bins.
+    """
+
+    def test_schedule_suffix_is_parsed(self):
+        from db_eplusout_reader.processing.esofile_reader import process_header_line
+
+        line = "276,1,BLOCK1:ZONE1,Zone Mean Air Temperature [C] !Hourly,ON"
+        line_id, key, type_, units, frequency = process_header_line(line)
+        assert line_id == 276
+        assert key == "BLOCK1:ZONE1"
+        assert type_ == "Zone Mean Air Temperature"
+        assert units == "C"
+        assert frequency == "hourly"
+
+    def test_duplicate_variable_with_and_without_schedule(self, tmp_path):
+        # 275 (no schedule) and 276 (schedule 'ON') share the same Variable.
+        header = _HEADER + (
+            "275,1,BLOCK1:ZONE1,Zone Mean Air Temperature [C] !Hourly\n"
+            "276,1,BLOCK1:ZONE1,Zone Mean Air Temperature [C] !Hourly,ON\n"
+        )
+        body = (
+            "End of Data Dictionary\n"
+            "1,TEST ENV, 0.0, 0.0, 0.0, 0.0\n"
+            "2,1, 1, 1, 0, 1, 0.00,60.00,Tuesday\n"
+            "7,20.0\n"
+            "275,21.0\n"
+            "276,22.0\n"
+            "End of Data\n"
+        )
+        eso = tmp_path / "schedule.eso"
+        eso.write_text(header + body)
+
+        result = process_eso_file(str(eso))  # must not raise KeyError
+
+        outputs = result[0].outputs["hourly"]
+        assert outputs[275] == [21.0]
+        assert outputs[276] == [22.0]
