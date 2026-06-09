@@ -87,8 +87,14 @@ def fetch_data_dict_rows(conn, variable, sql_frequency, alike):
 
 
 def to_string(unicode_variable):
-    """Convert variable unicode field names to string field names."""
-    return Variable(*map(lambda x: str(x), unicode_variable))
+    """Convert variable unicode field names to string field names.
+
+    Since EnergyPlus 23.1 the ``KeyValue`` of meter outputs is stored as
+    ``NULL`` instead of an empty string. A ``None`` field is normalized to an
+    empty string so meters present a ``key`` of ``""`` (as before) rather than
+    the literal string ``"None"``.
+    """
+    return Variable(*("" if x is None else str(x) for x in unicode_variable))
 
 
 def get_unsorted_sub_dict(rows):
