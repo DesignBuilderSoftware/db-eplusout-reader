@@ -134,6 +134,14 @@ results = get_results(path, variables, frequency=D, alike=True)
 # Variable("BLOCK", None, None) will match "PEOPLE BLOCK1:ZONE2"
 ```
 
+**Strict Mode**
+
+```python
+# By default, requested variables that aren't present are silently skipped.
+# Pass strict=True to raise VariableNotFound instead.
+results = get_results(path, variables, frequency=D, strict=True)
+```
+
 **Date Range Filtering**
 
 ```python

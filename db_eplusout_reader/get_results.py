@@ -5,7 +5,13 @@ from db_eplusout_reader.sql_reader import get_results_from_sql
 
 
 def get_results(
-    file_or_path, variables, frequency, alike=False, start_date=None, end_date=None
+    file_or_path,
+    variables,
+    frequency,
+    alike=False,
+    start_date=None,
+    end_date=None,
+    strict=False,
 ):
     r"""
     Extract results from given file.
@@ -92,6 +98,9 @@ def get_results(
         Lower datetime interval boundary, inclusive.
     end_date : default None, datetime.datetime
         Upper datetime interval boundary, inclusive.
+    strict : default False, bool
+        When True, raise VariableNotFound if any requested variable
+        does not match an output in the file.
 
     Returns
     -------
@@ -109,6 +118,7 @@ def get_results(
                 alike=alike,
                 start_date=start_date,
                 end_date=end_date,
+                strict=strict,
             )
         elif ext == ".eso":
             eso_file = DBEsoFile.from_path(file_or_path)
@@ -118,6 +128,7 @@ def get_results(
                 alike=alike,
                 start_date=start_date,
                 end_date=end_date,
+                strict=strict,
             )
         else:
             raise TypeError(f"Unsupported file type '{ext}' provided!")
@@ -128,6 +139,7 @@ def get_results(
             alike=alike,
             start_date=start_date,
             end_date=end_date,
+            strict=strict,
         )
     elif isinstance(file_or_path, DBEsoFileCollection):
         raise TypeError(

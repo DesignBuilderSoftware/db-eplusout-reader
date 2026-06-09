@@ -13,6 +13,7 @@ import pytest
 
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, TS, A, D, H, M
+from db_eplusout_reader.exceptions import VariableNotFound
 from db_eplusout_reader.results_dict import ResultsHandler
 from db_eplusout_reader.sql_reader import (
     get_timestamps_from_sql,
@@ -112,6 +113,26 @@ class TestSql:
         with pytest.raises(IOError):
             get_results(invalid_path, variables=variable, frequency=H)
         assert not os.path.exists(invalid_path)
+
+
+class TestSqlStrict:
+    _MISSING = Variable("NOPE", "Does Not Exist", "X")
+
+    def test_strict_present_variable_ok(self, sql_path):
+        results = get_results(sql_path, _DRYBULB, frequency=H, strict=True)
+        assert len(results) == 1
+
+    def test_strict_missing_variable_raises(self, sql_path):
+        with pytest.raises(VariableNotFound):
+            get_results(sql_path, [_DRYBULB, self._MISSING], frequency=H, strict=True)
+
+    def test_non_strict_missing_variable_ignored(self, sql_path):
+        results = get_results(sql_path, [_DRYBULB, self._MISSING], frequency=H)
+        assert len(results) == 1
+
+    def test_strict_message_lists_missing(self, sql_path):
+        with pytest.raises(VariableNotFound, match="Does Not Exist"):
+            get_results(sql_path, self._MISSING, frequency=H, strict=True)
 
 
 class TestSqlInternals:
