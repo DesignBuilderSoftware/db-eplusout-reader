@@ -154,16 +154,12 @@ class DBEsoFile:
         freq_dates = self.dates.get(frequency, [])
 
         rd = ResultsDictionary(frequency)
-        matched_vars, not_found = self._match_variables(variables, freq_header, alike)
-        if strict:
-            raise_if_missing(not_found)
+        matched_vars = self._match_variables(variables, freq_header, alike, strict)
 
         for var, var_id in matched_vars.items():
             values = freq_outputs.get(var_id, [])
             if start_date or end_date:
-                values, filtered_dates = self._filter_by_date(
-                    values, freq_dates, start_date, end_date
-                )
+                values, _ = self._filter_by_date(values, freq_dates, start_date, end_date)
             rd[var] = values
 
         if start_date or end_date:
@@ -173,11 +169,11 @@ class DBEsoFile:
 
         return rd
 
-    def _match_variables(self, variables, freq_header, alike):
+    def _match_variables(self, variables, freq_header, alike, strict=False):
         """Find matching variables from the header based on filter criteria.
 
-        Returns the matched {Variable : id} mapping and the list of requested
-        variables that did not match any header variable.
+        When ``strict`` is True, raise VariableNotFound if any requested
+        variable does not match a header variable.
         """
         matched = {}
         not_found = []
@@ -189,7 +185,9 @@ class DBEsoFile:
                     found = True
             if not found:
                 not_found.append(req_var)
-        return matched, not_found
+        if strict:
+            raise_if_missing(not_found)
+        return matched
 
     def _variable_matches(self, request, header, alike):
         """Check if a header variable matches the requested variable."""
