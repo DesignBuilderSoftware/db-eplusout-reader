@@ -30,13 +30,10 @@ From [PyPI](https://pypi.org/project/db-eplusout-reader/):
 pip install db-eplusout-reader   # or: uv add db-eplusout-reader
 ```
 
-**DesignBuilder:** to update the bundled copy, install the `.whl` from the
-[release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases)
-into DesignBuilder's Python directory, or copy the `db_eplusout_reader` folder
-into its Python `Lib` directory.
+**DesignBuilder:** to update the bundled copy, install into its Python directory:
 
 ```bash
-python -m pip install db_eplusout_reader-x.x.x-py3-none-any.whl --target "C:\Program Files\DesignBuilder\Python\Lib"
+pip install db-eplusout-reader --target "C:\Program Files\DesignBuilder\Python\Lib"
 ```
 
 ## Usage
