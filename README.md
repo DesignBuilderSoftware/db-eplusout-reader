@@ -24,50 +24,20 @@ A tool to fetch results from EnergyPlus output files (`.sql` and `.eso` formats)
 
 ## Installation
 
-### Standalone Python Environment
-
-The package is published on [PyPI](https://pypi.org/project/db-eplusout-reader/):
+From [PyPI](https://pypi.org/project/db-eplusout-reader/):
 
 ```bash
-pip install db-eplusout-reader
+pip install db-eplusout-reader   # or: uv add db-eplusout-reader
 ```
 
-Or with [uv](https://github.com/astral-sh/uv):
+**DesignBuilder:** to update the bundled copy, install the `.whl` from the
+[release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases)
+into DesignBuilder's Python directory, or copy the `db_eplusout_reader` folder
+into its Python `Lib` directory.
 
 ```bash
-uv add db-eplusout-reader
+python -m pip install db_eplusout_reader-x.x.x-py3-none-any.whl --target "C:\Program Files\DesignBuilder\Python\Lib"
 ```
-
-To install a specific version:
-
-```bash
-pip install db-eplusout-reader==0.5.0
-```
-
-To install the latest unreleased code straight from GitHub:
-
-```bash
-pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
-```
-
-### DesignBuilder Integration
-
-Since DesignBuilder does not always include the latest package release, you can manually update it:
-
-**Option 1: Wheel Installation**
-
-1. Download the `.whl` file from the [release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases)
-2. Delete existing `db_eplusout_reader` folder in DesignBuilder's Python directory
-3. Install with pip (may require admin mode):
-
-```bash
-python -m pip install "C:\path\to\db_eplusout_reader-x.x.x-py3-none-any.whl" --target "C:\Program Files\DesignBuilder\Python\Lib"
-```
-
-**Option 2: Manual Copy**
-
-1. Download the source code `.zip` from the release page
-2. Copy the `db_eplusout_reader` folder to DesignBuilder's Python `Lib` directory
 
 ## Usage
 
