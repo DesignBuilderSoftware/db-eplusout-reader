@@ -11,8 +11,8 @@ A tool to fetch results from EnergyPlus output files (`.sql` and `.eso` formats)
 - Filter variables by key, type, and units
 - Support for exact and substring (alike) matching
 - Filter results by date range
-- Export results to CSV
-- Zero runtime dependencies
+- Export results to CSV (and optionally Parquet via the `parquet` extra)
+- Zero runtime dependencies (the `parquet` extra adds `pyarrow`)
 
 ## DesignBuilder Compatibility
 
@@ -185,6 +185,27 @@ results.to_csv(
     title="My Results",   # Add title row
     append=True           # Append to existing file
 )
+```
+
+### Parquet (optional)
+
+Parquet is handy for object-storage workflows. It's an optional extension —
+install the extra to enable it:
+
+```bash
+pip install db-eplusout-reader[parquet]
+```
+
+```python
+from db_eplusout_reader import get_results, to_parquet, read_parquet
+
+results = get_results(path, variables, frequency=M)
+
+# Write to Parquet (extra kwargs forwarded to pyarrow, e.g. compression)
+to_parquet(results, r"C:\output.parquet", compression="snappy")
+
+# Read back into a ResultsDictionary (frequency, variables and time series preserved)
+results = read_parquet(r"C:\output.parquet")
 ```
 
 ## Complete Example
