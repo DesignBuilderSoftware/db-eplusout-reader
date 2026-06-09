@@ -26,14 +26,28 @@ A tool to fetch results from EnergyPlus output files (`.sql` and `.eso` formats)
 
 ### Standalone Python Environment
 
+The package is published on [PyPI](https://pypi.org/project/db-eplusout-reader/):
+
 ```bash
-pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
+pip install db-eplusout-reader
+```
+
+Or with [uv](https://github.com/astral-sh/uv):
+
+```bash
+uv add db-eplusout-reader
 ```
 
 To install a specific version:
 
 ```bash
-pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git@v0.3.2
+pip install db-eplusout-reader==0.5.0
+```
+
+To install the latest unreleased code straight from GitHub:
+
+```bash
+pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
 ```
 
 ### DesignBuilder Integration
