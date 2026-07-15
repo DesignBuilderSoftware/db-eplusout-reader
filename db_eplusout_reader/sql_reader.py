@@ -4,6 +4,7 @@ from collections import OrderedDict
 from datetime import datetime, timedelta
 
 from db_eplusout_reader.constants import RP, TS, A, D, H, M
+from db_eplusout_reader.exceptions import raise_if_missing
 from db_eplusout_reader.processing.esofile_reader import Variable
 from db_eplusout_reader.results_dict import ResultsDictionary
 
@@ -87,8 +88,14 @@ def fetch_data_dict_rows(conn, variable, sql_frequency, alike):
 
 
 def to_string(unicode_variable):
-    """Convert variable unicode field names to string field names."""
-    return Variable(*map(lambda x: str(x), unicode_variable))
+    """Convert variable unicode field names to string field names.
+
+    Since EnergyPlus 23.1 the ``KeyValue`` of meter outputs is stored as
+    ``NULL`` instead of an empty string. A ``None`` field is normalized to an
+    empty string so meters present a ``key`` of ``""`` (as before) rather than
+    the literal string ``"None"``.
+    """
+    return Variable(*("" if x is None else str(x) for x in unicode_variable))
 
 
 def get_unsorted_sub_dict(rows):
@@ -109,13 +116,20 @@ def sort_by_value(unsorted_dict):
 
 
 def get_ids_dict(conn, variables, sql_frequency, alike):
-    """Find id : Variable pairs for given 'Variable' request."""
+    """Find id : Variable pairs for given 'Variable' request.
+
+    Returns the id : Variable mapping and the list of requested variables
+    that did not match any output.
+    """
     all_ids_dict = OrderedDict()
+    not_found = []
     for variable in variables:
         rows = fetch_data_dict_rows(conn, variable, sql_frequency, alike)
         ids_dict = get_unsorted_sub_dict(rows)
+        if not ids_dict:
+            not_found.append(variable)
         all_ids_dict.update(sort_by_value(ids_dict))
-    return all_ids_dict
+    return all_ids_dict, not_found
 
 
 def validate_time(timestamp, start_date, end_date):
@@ -225,8 +239,100 @@ def get_timestamps_from_sql(path, frequency, start_date=None, end_date=None):
     return timestamps
 
 
+def connect(path):
+    """Open a connection to an existing .sql file."""
+    if not os.path.exists(path):
+        raise IOError("Cannot read results, file '{}' does not exist.".format(path))
+    return sqlite3.connect(path)
+
+
+def get_tables(path):
+    """
+    Return the reporting frequencies (tables) available in the .sql file.
+
+    Parameters
+    ----------
+    path : str
+        A path to EnergyPlus .sql file output.
+
+    Returns
+    -------
+    list of str
+        Available frequencies as {TS, H, D, M, A, RP} constants, ordered
+        from the most to the least granular.
+
+    """
+    conn = connect(path)
+    try:
+        rows = conn.execute(
+            "SELECT DISTINCT ReportingFrequency FROM ReportDataDictionary"
+        ).fetchall()
+    finally:
+        conn.close()
+    order = {TS: 0, H: 1, D: 2, M: 3, A: 4, RP: 5}
+    tables = []
+    for (sql_frequency,) in rows:
+        frequency = to_eso_frequency(sql_frequency)
+        # 'Zone Timestep' and 'HVAC System Timestep' both map to TS
+        if frequency not in tables:
+            tables.append(frequency)
+    return sorted(tables, key=lambda f: order[f])
+
+
+def get_variables(path, frequency):
+    """
+    Return the variables available for the given frequency (table).
+
+    Parameters
+    ----------
+    path : str
+        A path to EnergyPlus .sql file output.
+    frequency : str
+        An output interval, one of {TS, H, D, M, A, RP} constants.
+
+    Returns
+    -------
+    list of Variable
+        Available variables for the frequency, sorted.
+
+    """
+    conn = connect(path)
+    try:
+        sql_frequency = to_sql_frequency(frequency)
+        rows = conn.execute(
+            "SELECT ReportDataDictionaryIndex, ReportingFrequency, KeyValue, Name, Units"
+            " FROM ReportDataDictionary WHERE ReportingFrequency = ?",
+            (sql_frequency,),
+        )
+        ids_dict = get_unsorted_sub_dict(rows)
+    finally:
+        conn.close()
+    return list(sort_by_value(ids_dict).values())
+
+
+def get_all_variables(path):
+    """
+    Return an overview of every available variable grouped by frequency.
+
+    Parameters
+    ----------
+    path : str
+        A path to EnergyPlus .sql file output.
+
+    Returns
+    -------
+    OrderedDict of {str : list of Variable}
+        Mapping of frequency (table) to its available variables.
+
+    """
+    overview = OrderedDict()
+    for frequency in get_tables(path):
+        overview[frequency] = get_variables(path, frequency)
+    return overview
+
+
 def get_results_from_sql(
-    path, variables, frequency, alike=False, start_date=None, end_date=None
+    path, variables, frequency, alike=False, start_date=None, end_date=None, strict=False
 ):
     """
     Extract output values from given EnergyPlus .sql file.
@@ -246,18 +352,22 @@ def get_results_from_sql(
         Lower datetime interval boundary, inclusive.
     end_date : default None, datetime.datetime
         Upper datetime interval boundary, inclusive.
+    strict : default False, bool
+        When True, raise VariableNotFound if any requested variable
+        does not match an output in the file.
 
     Returns
     -------
     ResultsDictionary : Dict of {Variable, list of float}
 
     """
-    if not os.path.exists(path):
-        raise IOError("Cannot read results, file '{}' does not exist.".format(path))
-    conn = sqlite3.connect(path)
+    conn = connect(path)
     variables = [variables] if isinstance(variables, Variable) else variables
     sql_frequency = to_sql_frequency(frequency)
-    ids_dict = get_ids_dict(conn, variables, sql_frequency, alike)
+    ids_dict, not_found = get_ids_dict(conn, variables, sql_frequency, alike)
+    if strict and not_found:
+        conn.close()
+        raise_if_missing(not_found)
     rd = ResultsDictionary(frequency)
     for id_, variable in ids_dict.items():
         if start_date or end_date:

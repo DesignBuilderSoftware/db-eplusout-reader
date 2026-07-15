@@ -26,5 +26,19 @@ class NoResults(Exception):
     """Exception raised when numeric outputs are requsted in empty results dictionary."""
 
 
+class VariableNotFound(Exception):
+    """Exception raised in strict mode when a requested variable is not present."""
+
+
+def raise_if_missing(not_found):
+    """Raise VariableNotFound listing any requested variables without a match."""
+    if not_found:
+        raise VariableNotFound(
+            "Requested variable(s) not found: {}".format(
+                ", ".join(repr(variable) for variable in not_found)
+            )
+        )
+
+
 class InvalidShape(Exception):
     """Exception raised when table does not have uniform number of items in each column."""

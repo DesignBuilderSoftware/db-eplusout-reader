@@ -24,36 +24,17 @@ A tool to fetch results from EnergyPlus output files (`.sql` and `.eso` formats)
 
 ## Installation
 
-### Standalone Python Environment
+From [PyPI](https://pypi.org/project/db-eplusout-reader/):
 
 ```bash
-pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git
+pip install db-eplusout-reader   # or: uv add db-eplusout-reader
 ```
 
-To install a specific version:
+**DesignBuilder:** to update the bundled copy, install into its Python directory:
 
 ```bash
-pip install git+https://github.com/DesignBuilderSoftware/db-eplusout-reader.git@v0.3.2
+pip install db-eplusout-reader --target "C:\Program Files\DesignBuilder\Python\Lib"
 ```
-
-### DesignBuilder Integration
-
-Since DesignBuilder does not always include the latest package release, you can manually update it:
-
-**Option 1: Wheel Installation**
-
-1. Download the `.whl` file from the [release page](https://github.com/DesignBuilderSoftware/db-eplusout-reader/releases)
-2. Delete existing `db_eplusout_reader` folder in DesignBuilder's Python directory
-3. Install with pip (may require admin mode):
-
-```bash
-python -m pip install "C:\path\to\db_eplusout_reader-x.x.x-py3-none-any.whl" --target "C:\Program Files\DesignBuilder\Python\Lib"
-```
-
-**Option 2: Manual Copy**
-
-1. Download the source code `.zip` from the release page
-2. Copy the `db_eplusout_reader` folder to DesignBuilder's Python `Lib` directory
 
 ## Usage
 
@@ -132,6 +113,14 @@ results = get_results(path, variables, frequency=D, alike=False)
 # Substring match - partial matches allowed
 results = get_results(path, variables, frequency=D, alike=True)
 # Variable("BLOCK", None, None) will match "PEOPLE BLOCK1:ZONE2"
+```
+
+**Strict Mode**
+
+```python
+# By default, requested variables that aren't present are silently skipped.
+# Pass strict=True to raise VariableNotFound instead.
+results = get_results(path, variables, frequency=D, strict=True)
 ```
 
 **Date Range Filtering**
