@@ -160,10 +160,9 @@ class TestCollectionMethods:
         col.append(session_eso_file)
         assert col[0] is session_eso_file
 
-    def test_count_returns_none(self, session_eso_file):
-        # count() is missing a return statement — it currently returns None
-        col = DBEsoFileCollection([session_eso_file])
-        assert col.count() is None
+    def test_count(self, session_eso_file):
+        col = DBEsoFileCollection([session_eso_file, session_eso_file])
+        assert col.count() == 2
 
     def test_index(self, session_eso_file_collection):
         item = session_eso_file_collection[0]
@@ -190,13 +189,12 @@ class TestCollectionMethods:
         col.remove(session_eso_file)
         assert len(list(col)) == 0
 
-    def test_reverse_does_not_mutate(self, session_eso_file):
-        # reverse() calls reversed() but doesn't assign the result back —
-        # the list remains unchanged (known bug)
-        col = DBEsoFileCollection([session_eso_file, session_eso_file])
-        original_first = col[0]
+    def test_reverse(self, session_eso_file_collection):
+        first, second = session_eso_file_collection[0], session_eso_file_collection[1]
+        col = DBEsoFileCollection([first, second])
         col.reverse()
-        assert col[0] is original_first  # unchanged
+        assert col[0] is second
+        assert col[1] is first
 
     def test_sort_raises_attribute_error(self, session_eso_file):
         # sort() references ef.file_name which does not exist on DBEsoFile
