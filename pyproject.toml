@@ -1,6 +1,6 @@
 [project]
 name = "db-eplusout-reader"
-version = "0.5.0"
+version = "0.6.0"
 description = "A tool to fetch results from EnergyPlus output files"
 authors = [
     { name = "Vojtech Panek", email = "vojtech.panek@designbuilder.co.uk" },
