@@ -1,5 +1,5 @@
 from db_eplusout_reader.constants import RP, TS, A, D, H, M
-from db_eplusout_reader.exceptions import CollectionRequired
+from db_eplusout_reader.exceptions import CollectionRequired, raise_if_missing
 from db_eplusout_reader.processing.esofile_reader import Variable, process_eso_file
 from db_eplusout_reader.processing.esofile_time import (
     convert_raw_date_data,
@@ -120,7 +120,9 @@ class DBEsoFile:
         order = {TS: 0, H: 1, D: 2, M: 3, A: 4, RP: 5}
         return sorted(list(self.header.keys()), key=lambda x: order[x])
 
-    def get_results(self, variables, frequency, alike=False, start_date=None, end_date=None):
+    def get_results(
+        self, variables, frequency, alike=False, start_date=None, end_date=None, strict=False
+    ):
         """
         Extract results from the parsed ESO file data.
 
@@ -137,6 +139,9 @@ class DBEsoFile:
             Lower datetime interval boundary, inclusive.
         end_date : default None, datetime.datetime
             Upper datetime interval boundary, inclusive.
+        strict : default False, bool
+            When True, raise VariableNotFound if any requested variable
+            does not match an output in the file.
 
         Returns
         -------
@@ -149,14 +154,12 @@ class DBEsoFile:
         freq_dates = self.dates.get(frequency, [])
 
         rd = ResultsDictionary(frequency)
-        matched_vars = self._match_variables(variables, freq_header, alike)
+        matched_vars = self._match_variables(variables, freq_header, alike, strict)
 
         for var, var_id in matched_vars.items():
             values = freq_outputs.get(var_id, [])
             if start_date or end_date:
-                values, filtered_dates = self._filter_by_date(
-                    values, freq_dates, start_date, end_date
-                )
+                values, _ = self._filter_by_date(values, freq_dates, start_date, end_date)
             rd[var] = values
 
         if start_date or end_date:
@@ -166,13 +169,24 @@ class DBEsoFile:
 
         return rd
 
-    def _match_variables(self, variables, freq_header, alike):
-        """Find matching variables from the header based on filter criteria."""
+    def _match_variables(self, variables, freq_header, alike, strict=False):
+        """Find matching variables from the header based on filter criteria.
+
+        When ``strict`` is True, raise VariableNotFound if any requested
+        variable does not match a header variable.
+        """
         matched = {}
+        not_found = []
         for req_var in variables:
+            found = False
             for header_var, var_id in freq_header.items():
                 if self._variable_matches(req_var, header_var, alike):
                     matched[header_var] = var_id
+                    found = True
+            if not found:
+                not_found.append(req_var)
+        if strict:
+            raise_if_missing(not_found)
         return matched
 
     def _variable_matches(self, request, header, alike):

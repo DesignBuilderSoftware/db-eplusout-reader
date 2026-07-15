@@ -14,6 +14,7 @@ import pytest
 from db_eplusout_reader import Variable, get_results
 from db_eplusout_reader.constants import RP, D, H, M
 from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection
+from db_eplusout_reader.exceptions import VariableNotFound
 
 # Variable present in all versioned 1ZoneUncontrolled files
 _DRYBULB = Variable("Environment", "Site Outdoor Air Drybulb Temperature", "C")
@@ -76,6 +77,27 @@ class TestEsoGetResults:
 
         assert len(results.time_series) == 8760
         assert isinstance(results.time_series[0], datetime)
+
+
+class TestEsoStrict:
+    _MISSING = Variable("NOPE", "Does Not Exist", "X")
+
+    def test_strict_present_variable_ok(self, session_eso_file):
+        results = session_eso_file.get_results([_DRYBULB], H, strict=True)
+        assert len(results) == 1
+
+    def test_strict_missing_variable_raises(self, session_eso_file):
+        with pytest.raises(VariableNotFound, match="Does Not Exist"):
+            session_eso_file.get_results([_DRYBULB, self._MISSING], H, strict=True)
+
+    def test_non_strict_missing_variable_ignored(self, session_eso_file):
+        results = session_eso_file.get_results([_DRYBULB, self._MISSING], H)
+        assert len(results) == 1
+
+    def test_strict_missing_frequency_raises(self, session_eso_file):
+        # frequency with no matching variable for the request
+        with pytest.raises(VariableNotFound):
+            session_eso_file.get_results([self._MISSING], H, strict=True)
 
     def test_get_results_no_match(self, session_eso_file):
         variables = [Variable("NonExistent", "Variable", "X")]
