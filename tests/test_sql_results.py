@@ -92,6 +92,16 @@ class TestSql:
         assert len(results) == 1
         assert len(list(results.values())[0]) > 0
 
+    def test_meter_null_keyvalue_is_empty_string(self, sql_path):
+        # Since EnergyPlus 23.1 meter KeyValue is stored as NULL. The returned
+        # Variable key must be an empty string, not the literal "None" (#12).
+        results = get_results(
+            sql_path, Variable(None, "EnergyTransfer:Facility", "J"), frequency=H
+        )
+        assert len(results) == 1
+        assert results.first_variable.key == ""
+        assert len(results.first_array) > 0
+
     def test_results_time_series(self, sql_path):
         variable = Variable("ZONE ONE", "Zone Other Equipment Total Heating Energy", "J")
         for frequency, expected in zip([RP, M, D, H], [3, 14, 367, 8808]):
