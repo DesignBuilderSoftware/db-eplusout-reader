@@ -15,12 +15,9 @@ __all__ = [
     "DBEsoFileCollection",
     "get_results",
     "Variable",
-<<<<<<< feat/24-parquet
     "read_parquet",
     "to_parquet",
-=======
     "get_tables",
     "get_variables",
     "get_all_variables",
->>>>>>> main
 ]
