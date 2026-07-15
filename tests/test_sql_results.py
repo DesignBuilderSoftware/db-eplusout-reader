@@ -11,7 +11,13 @@ from datetime import datetime
 
 import pytest
 
-from db_eplusout_reader import Variable, get_results
+from db_eplusout_reader import (
+    Variable,
+    get_all_variables,
+    get_results,
+    get_tables,
+    get_variables,
+)
 from db_eplusout_reader.constants import RP, TS, A, D, H, M
 from db_eplusout_reader.exceptions import VariableNotFound
 from db_eplusout_reader.results_dict import ResultsHandler
@@ -93,6 +99,16 @@ class TestSql:
         assert len(results) == 1
         assert len(list(results.values())[0]) > 0
 
+    def test_meter_null_keyvalue_is_empty_string(self, sql_path):
+        # Since EnergyPlus 23.1 meter KeyValue is stored as NULL. The returned
+        # Variable key must be an empty string, not the literal "None" (#12).
+        results = get_results(
+            sql_path, Variable(None, "EnergyTransfer:Facility", "J"), frequency=H
+        )
+        assert len(results) == 1
+        assert results.first_variable.key == ""
+        assert len(results.first_array) > 0
+
     def test_results_time_series(self, sql_path):
         variable = Variable("ZONE ONE", "Zone Other Equipment Total Heating Energy", "J")
         for frequency, expected in zip([RP, M, D, H], [3, 14, 367, 8808]):
@@ -133,6 +149,38 @@ class TestSqlStrict:
     def test_strict_message_lists_missing(self, sql_path):
         with pytest.raises(VariableNotFound, match="Does Not Exist"):
             get_results(sql_path, self._MISSING, frequency=H, strict=True)
+class TestListVariables:
+    def test_get_tables(self, any_sql_path):
+        tables = get_tables(any_sql_path)
+        assert len(tables) > 0
+        # frequencies are returned as eso constants and de-duplicated
+        assert len(tables) == len(set(tables))
+        assert {H, D}.issubset(set(tables))
+
+    def test_get_variables_for_frequency(self, sql_path):
+        variables = get_variables(sql_path, H)
+        assert len(variables) > 0
+        assert all(isinstance(v, Variable) for v in variables)
+        assert _DRYBULB in variables
+        # sorted and unique
+        assert variables == sorted(variables)
+
+    def test_listed_variable_is_retrievable(self, sql_path):
+        # a listed (non-meter) variable can be fetched via get_results
+        variables = get_variables(sql_path, H)
+        assert _DRYBULB in variables
+        results = get_results(sql_path, _DRYBULB, frequency=H)
+        assert results.first_variable == _DRYBULB
+
+    def test_get_all_variables(self, sql_path):
+        overview = get_all_variables(sql_path)
+        assert set(overview.keys()) == set(get_tables(sql_path))
+        for frequency, variables in overview.items():
+            assert variables == get_variables(sql_path, frequency)
+
+    def test_get_tables_missing_file(self, test_files_dir):
+        with pytest.raises(IOError):
+            get_tables(os.path.join(test_files_dir, "nope.sql"))
 
 
 class TestSqlInternals:
