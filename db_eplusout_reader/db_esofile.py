@@ -284,7 +284,7 @@ class DBEsoFileCollection:
 
     def count(self):
         """Return the number of DBEsoFile objects in the collection."""
-        len(self._db_eso_files)
+        return len(self._db_eso_files)
 
     def index(self, item):
         """Return the index of the given DBEsoFile in the collection."""
@@ -308,7 +308,7 @@ class DBEsoFileCollection:
 
     def reverse(self):
         """Reverse the order of the collection in place."""
-        reversed(self._db_eso_files)
+        self._db_eso_files.reverse()
 
     def sort(self, reverse):
         """Sort the collection in place by file name."""
