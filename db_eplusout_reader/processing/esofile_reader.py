@@ -21,6 +21,13 @@ ANNUAL_LINE = 6
 
 Variable = namedtuple("Variable", "key type units")
 
+# Compiled once (rather than per line) to avoid repeated recompilation.
+# The trailing '(?:,(.*))?' captures an optional schedule name emitted for
+# variables reported under a schedule (conditional reporting), e.g.:
+#     276,1,BLOCK1:ZONE1,Zone Mean Air Temperature [C] !Hourly,ON
+# The schedule name is parsed but does not take part in variable identity.
+HEADER_PATTERN = re.compile(r"^(\d+),(\d+),(.*?)(?:,(.*?) ?\[| ?\[)(.*?)\] !(\w*)(?:,(.*))?")
+
 
 def get_eso_file_version(raw_version):
     """Return eso file version as an integer (i.e.: 860, 890)."""
@@ -62,10 +69,10 @@ def process_header_line(line):
         Processed line tuple (ID, key name, variable name, units, frequency)
 
     """
-    pattern = re.compile(r"^(\d+),(\d+),(.*?)(?:,(.*?) ?\[| ?\[)(.*?)\] !(\w*)")
-
     # this raises attribute error when there's some unexpected line syntax
-    raw_line_id, _, key, type_, units, frequency = pattern.search(line).groups()
+    raw_line_id, _, key, type_, units, frequency, _schedule = HEADER_PATTERN.search(
+        line
+    ).groups()
     line_id = int(raw_line_id)
 
     # 'type' variable is 'None' for 'Meter' variable
@@ -91,11 +98,22 @@ def read_header(eso_file):
 
     Returns
     -------
-    dict of {str : dict of {Variable : int}}
-        A dictionary of eso file header line with populated values.
+    tuple of (dict, dict)
+        ``header`` mapping {str : dict of {Variable : int}} used for variable
+        matching, and ``all_ids`` mapping {str : list of int} holding every
+        line id seen for each frequency.
+
+    Note
+    ----
+    Two dictionary lines can collapse to the same ``Variable`` when they only
+    differ by a schedule name (conditional reporting). The ``header`` dict
+    keeps a single id per ``Variable`` (last one wins), but every id is still
+    emitted in the body, so ``all_ids`` is tracked separately to ensure the
+    output bins cover all of them and the body parser never hits a missing id.
 
     """
     header = defaultdict(partial(defaultdict))
+    all_ids = defaultdict(list)
     while True:
         raw_line = next(eso_file)
         try:
@@ -107,7 +125,8 @@ def read_header(eso_file):
                 raise BlankLineError("Empty line!")
             raise InvalidLineSyntax("Unexpected line syntax: '{}'!".format(raw_line))
         header[frequency][Variable(key, type_, units)] = line_id
-    return header
+        all_ids[frequency].append(line_id)
+    return header, all_ids
 
 
 def process_ts_h_d_frequency_line(line_id, data):
@@ -209,11 +228,11 @@ def split_raw_line(raw_line):
     return line_id, line
 
 
-def process_frequency_line(line_id, line, all_raw_outputs, header, raw_outputs):
+def process_frequency_line(line_id, line, all_raw_outputs, header, all_ids, raw_outputs):
     if line_id == ENVIRONMENT_LINE:
         # initialize variables for current environment
         environment_name = line[0].strip()
-        raw_outputs = RawOutputData(environment_name, header)
+        raw_outputs = RawOutputData(environment_name, header, all_ids)
         all_raw_outputs.append(raw_outputs)
         frequency = None
     else:
@@ -234,7 +253,7 @@ def process_frequency_line(line_id, line, all_raw_outputs, header, raw_outputs):
     return raw_outputs, frequency
 
 
-def read_body(eso_file, highest_frequency_id, header):
+def read_body(eso_file, highest_frequency_id, header, all_ids):
     """
     Read body of the eso file.
 
@@ -270,7 +289,7 @@ def read_body(eso_file, highest_frequency_id, header):
             # distribute outputs into relevant bins
             if line_id <= highest_frequency_id:
                 raw_outputs, frequency = process_frequency_line(
-                    line_id, line, all_raw_outputs, header, raw_outputs
+                    line_id, line, all_raw_outputs, header, all_ids, raw_outputs
                 )
             else:
                 # current line represents a result, replace nan values from the last step
@@ -299,10 +318,10 @@ def read_file(file):
 
     # Read header to obtain a header dictionary of EnergyPlus
     # outputs and initialize dictionary for output values
-    header = read_header(file)
+    header, all_ids = read_header(file)
 
     # Read body to obtain outputs and environment dictionaries
-    return read_body(file, last_standard_item_id, header)
+    return read_body(file, last_standard_item_id, header, all_ids)
 
 
 def process_eso_file(file_path):
