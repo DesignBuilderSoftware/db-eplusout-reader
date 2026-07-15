@@ -1,9 +1,13 @@
+"""Container holding raw, not-yet-dated numeric outputs parsed from an .eso file."""
+
 from collections import defaultdict
 
 from db_eplusout_reader.constants import RP, A, M
 
 
 class RawOutputData:
+    """Holds raw, not-yet-dated numeric outputs and dictionaries for a single environment."""
+
     def __init__(self, environment_name, header, all_ids=None):
         self.environment_name = environment_name
         self.header = header
@@ -25,6 +29,7 @@ class RawOutputData:
         ) = self.initialize_results_bins()
 
     def initialize_results_bins(self):
+        """Create empty outputs, dates, cumulative_days and days_of_week bins for all_ids."""
         outputs = defaultdict(dict)
         dates = {}
         cumulative_days = {}
@@ -40,5 +45,6 @@ class RawOutputData:
         return outputs, dates, cumulative_days, days_of_week
 
     def initialize_next_outputs_step(self, frequency):
+        """Append a nan placeholder to every output array for the given frequency."""
         for value in self.outputs[frequency].values():
             value.append(float("nan"))

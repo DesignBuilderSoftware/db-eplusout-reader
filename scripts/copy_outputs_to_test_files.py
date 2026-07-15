@@ -18,6 +18,7 @@ TEST_FILES = Path(__file__).parent.parent / "tests" / "test_files"
 
 
 def main() -> None:
+    """Copy matching .eso/.sql outputs from resources/output/ into tests/test_files/."""
     TEST_FILES.mkdir(parents=True, exist_ok=True)
 
     copied: list[str] = []

@@ -1,3 +1,6 @@
+"""Exceptions raised while reading and processing EnergyPlus output files."""
+
+
 class IncompleteFile(Exception):
     """Exception raised when the file is not complete."""
 

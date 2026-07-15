@@ -1,3 +1,5 @@
+"""Parse the header and body of an EnergyPlus .eso file into raw output data."""
+
 import re
 from collections import defaultdict, namedtuple
 from datetime import datetime
@@ -222,6 +224,7 @@ def process_month_rp_frequency_line(line_id, data):
 
 
 def split_raw_line(raw_line):
+    """Split a raw eso file body line into its line id and remaining fields."""
     split_line = raw_line.split(",")
     line_id = int(split_line[0])
     line = split_line[1:]
@@ -229,6 +232,7 @@ def split_raw_line(raw_line):
 
 
 def process_frequency_line(line_id, line, all_raw_outputs, header, all_ids, raw_outputs):
+    """Process a frequency line, returning the (possibly new) raw outputs and frequency."""
     if line_id == ENVIRONMENT_LINE:
         # initialize variables for current environment
         environment_name = line[0].strip()

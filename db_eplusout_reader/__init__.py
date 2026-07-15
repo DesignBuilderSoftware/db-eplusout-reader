@@ -1,3 +1,5 @@
+"""A tool to fetch results from EnergyPlus output files."""
+
 __version__ = "0.1.0"
 
 from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection

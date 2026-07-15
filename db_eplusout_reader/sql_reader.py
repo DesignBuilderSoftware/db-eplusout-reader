@@ -1,3 +1,5 @@
+"""Read variables and results directly from an EnergyPlus .sql output file."""
+
 import os.path
 import sqlite3
 from collections import OrderedDict
@@ -48,9 +50,9 @@ def eso_to_sql_variable(variable):
     """Convert 'Variable' to be compatible with sql queries."""
     sql_columns = ["KeyValue", "Name", "Units"]
     sql_variable = {}
-    for variable, column in zip(variable, sql_columns):
-        if variable is not None:
-            sql_variable[column] = variable
+    for piece, column in zip(variable, sql_columns):
+        if piece is not None:
+            sql_variable[column] = piece
     return sql_variable
 
 
@@ -99,8 +101,9 @@ def to_string(unicode_variable):
 
 
 def get_unsorted_sub_dict(rows):
+    """Build an id : Variable mapping from data dict rows, in original row order."""
     unsorted_dict = {}
-    for id_, frequency, key, type_, units in rows:
+    for id_, _frequency, key, type_, units in rows:
         unicode_variable = Variable(key, type_, units)
         variable = to_string(unicode_variable)
         unsorted_dict[id_] = variable
@@ -108,8 +111,9 @@ def get_unsorted_sub_dict(rows):
 
 
 def sort_by_value(unsorted_dict):
+    """Return an OrderedDict of the given dict's items sorted by value."""
     sorted_dct = OrderedDict()
-    sorted_items = [item for item in sorted(unsorted_dict.items(), key=lambda x: x[1])]
+    sorted_items = list(sorted(unsorted_dict.items(), key=lambda x: x[1]))
     for key, value in sorted_items:
         sorted_dct[key] = value
     return sorted_dct
@@ -217,6 +221,7 @@ def parse_sql_timestamps(time_rows):
 
 
 def filter_timestamps(timestamps, start_date, end_date):
+    """Return timestamps that lie between start and end dates."""
     valid_timestamps = []
     for timestamp in timestamps:
         if validate_time(timestamp, start_date, end_date):

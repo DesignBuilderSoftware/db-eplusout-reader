@@ -1,3 +1,5 @@
+"""Convert raw EnergyPlus timestamp data into standard datetime objects."""
+
 import calendar
 import logging
 from collections import namedtuple
@@ -86,13 +88,13 @@ def check_year_increment(first_step_data, current_step_data):
 def generate_datetime_dates(raw_dates, year):
     """Generate datetime index for a given period."""
     dates = []
-    for i in range(0, len(raw_dates)):
+    for raw_date in raw_dates:
         # based on the first, current and previous
         # steps decide if the year should be incremented
-        if check_year_increment(raw_dates[0], raw_dates[i]):
+        if check_year_increment(raw_dates[0], raw_date):
             year += 1
         # year can be incremented automatically when converting to datetime
-        date = parse_eso_timestamp(year, *raw_dates[i])
+        date = parse_eso_timestamp(year, *raw_date)
         dates.append(date)
     return dates
 

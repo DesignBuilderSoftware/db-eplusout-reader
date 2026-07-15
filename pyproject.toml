@@ -57,24 +57,14 @@ ignore-patterns = ["test_.*\\.py", "conftest\\.py"]
 
 [tool.pylint."messages control"]
 disable = [
-    "C0114", # missing-module-docstring
-    "C0115", # missing-class-docstring
-    "C0116", # missing-function-docstring
-    "C0200", # consider-using-enumerate
-    "C0209", # consider-using-f-string
-    "C0301", # line-too-long (handled by ruff)
-    "R0903", # too-few-public-methods
-    "R0913", # too-many-arguments
-    "R0917", # too-many-positional-arguments
-    "R1704", # redefined-argument-from-local
-    "R1720", # no-else-raise
-    "R1721", # unnecessary-comprehension
-    "R1725", # super-with-arguments
-    "R1737", # use-yield-from
-    "W0108", # unnecessary-lambda
-    "W0212", # protected-access
-    "W0612", # unused-variable
-    "W0621", # redefined-outer-name (common in pytest fixtures)
+    # 2.7 DesignBuilder iron python compatibility
+    "C0209", # consider-using-f-string,
     "W0707", # raise-missing-from
+    "R1737", # use-yield-from
     "W1514", # unspecified-encoding
+    # Relax the rules, marginal fails, better to disable
+    # than specify the full pylint config
+    "R0913", # too-many-arguments
+    "R0903", # too-few-public-methods
+    "R0917", # too-many-positional-arguments
 ]
