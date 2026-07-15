@@ -1,3 +1,5 @@
+"""Shared frequency and variable field constants."""
+
 TS = "timestep"
 H = "hourly"
 D = "daily"

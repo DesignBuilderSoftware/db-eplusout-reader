@@ -1,3 +1,5 @@
+"""Dictionary-like container for extracted results and its table/csv export helpers."""
+
 import csv
 import sys
 from collections import OrderedDict
@@ -48,6 +50,7 @@ class ResultsDictionary(OrderedDict):
 
     @property
     def scalar(self):
+        """Return the first value of the first variable's array."""
         try:
             return self._items[0][1][0]
         except IndexError:
@@ -55,18 +58,22 @@ class ResultsDictionary(OrderedDict):
 
     @property
     def first_array(self):
+        """Return the numeric array of the first variable."""
         return self._items[0][1]
 
     @property
     def first_variable(self):
+        """Return the first Variable named tuple."""
         return self._items[0][0]
 
     @property
     def variables(self):
+        """Return all Variable named tuples."""
         return [v[0] for v in self._items]
 
     @property
     def arrays(self):
+        """Return all numeric arrays."""
         return [v[1] for v in self._items]
 
     def to_table(self, explode_header=True):

@@ -72,7 +72,8 @@ def reset_idd() -> None:
         pass  # resetidd() always raises this after clearing state
 
 
-def main() -> None:
+def main() -> None:  # pylint: disable=too-many-locals, too-many-statements
+    """Run every IDF in resources/, grouped by EnergyPlus version, and report timings."""
     idf_files = sorted(RESOURCES.glob("*.idf"))
     if not idf_files:
         print("No IDF files found in resources/")

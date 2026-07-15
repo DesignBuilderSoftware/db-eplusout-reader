@@ -1,3 +1,5 @@
+"""High level entry point to extract results from .eso or .sql files."""
+
 import os
 
 from db_eplusout_reader.db_esofile import DBEsoFile, DBEsoFileCollection

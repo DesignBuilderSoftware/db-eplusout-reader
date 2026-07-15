@@ -149,6 +149,8 @@ class TestSqlStrict:
     def test_strict_message_lists_missing(self, sql_path):
         with pytest.raises(VariableNotFound, match="Does Not Exist"):
             get_results(sql_path, self._MISSING, frequency=H, strict=True)
+
+
 class TestListVariables:
     def test_get_tables(self, any_sql_path):
         tables = get_tables(any_sql_path)
