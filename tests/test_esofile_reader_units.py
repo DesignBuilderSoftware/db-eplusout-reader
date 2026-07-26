@@ -77,18 +77,14 @@ class TestHeaderLine:
 class TestFrequencyLines:
     def test_hourly_line(self):
         data = ["1", " 1", " 1", " 0", " 1", " 0.00", "60.00", "Tuesday\n"]
-        frequency, date, day = process_ts_h_d_frequency_line(
-            TIMESTEP_OR_HOURLY_LINE, data
-        )
+        frequency, date, day = process_ts_h_d_frequency_line(TIMESTEP_OR_HOURLY_LINE, data)
         assert frequency == "hourly"
         assert date == EsoTimestamp(1, 1, 1, 60)
         assert day == "Tuesday"
 
     def test_timestep_line(self):
         data = ["1", " 1", " 1", " 0", " 1", "30.00", "60.00", "Tuesday\n"]
-        frequency, date, day = process_ts_h_d_frequency_line(
-            TIMESTEP_OR_HOURLY_LINE, data
-        )
+        frequency, date, day = process_ts_h_d_frequency_line(TIMESTEP_OR_HOURLY_LINE, data)
         assert frequency == "timestep"
         assert date == EsoTimestamp(1, 1, 1, 60)
         assert day == "Tuesday"
@@ -141,9 +137,7 @@ class TestBodyErrors:
         )
         eso = tmp_path / "bad_body.eso"
         eso.write_text(
-            header
-            + "1,TEST ENV, 0.0, 0.0, 0.0, 0.0\n"
-            + "??? invalid body line ???\n"
+            header + "1,TEST ENV, 0.0, 0.0, 0.0, 0.0\n" + "??? invalid body line ???\n"
         )
         with pytest.raises(InvalidLineSyntax, match="Unexpected line syntax"):
             process_eso_file(str(eso))

@@ -68,8 +68,11 @@ class TestFromPath:
 
     def test_from_path_multiple_environments_raises(self, tmp_path):
         eso = tmp_path / "multi_env.eso"
-        eso.write_text(_HEADER + _SINGLE_ENV_BODY.replace("End of Data\n", "")
-                       + _SINGLE_ENV_BODY.replace("TEST ENV", "SECOND ENV"))
+        eso.write_text(
+            _HEADER
+            + _SINGLE_ENV_BODY.replace("End of Data\n", "")
+            + _SINGLE_ENV_BODY.replace("TEST ENV", "SECOND ENV")
+        )
         with pytest.raises(CollectionRequired, match="multiple environments"):
             DBEsoFile.from_path(str(eso))
 
