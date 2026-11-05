@@ -57,6 +57,9 @@ def get_month_n_days_from_cumulative(monthly_cumulative_days):
 
 def find_num_of_days_annual(ann_num_of_days, rp_num_of_days):
     """Use runperiod data to calculate number of days for each annual period."""
+    if not ann_num_of_days:
+        # design-day environments report no annual rows
+        return []
     days = rp_num_of_days[0] // len(ann_num_of_days)
     return [days for _ in ann_num_of_days]
 
@@ -110,7 +113,9 @@ def update_start_dates(dates):
     timestep_to_monthly_dates = {k: dates[k] for k in dates if k in [TS, H, D, M]}
     if timestep_to_monthly_dates:
         for frequency in (M, A, RP):
-            if frequency in dates:
+            # A design-day environment declares annual variables but never
+            # reports an annual row, so its annual dates can be empty.
+            if dates.get(frequency):
                 dates[frequency] = set_start_date(dates[frequency], timestep_to_monthly_dates)
     return dates
 

@@ -30,12 +30,23 @@ Variable = namedtuple("Variable", "key type units")
 # The schedule name is parsed but does not take part in variable identity.
 HEADER_PATTERN = re.compile(r"^(\d+),(\d+),(.*?)(?:,(.*?) ?\[| ?\[)(.*?)\] !(\w*)(?:,(.*))?")
 
+# e.g. ' Version 25.2.0-cf7368216c'
+VERSION_PATTERN = re.compile(r"Version (\d+)\.(\d+)\.(\d+)")
+
+# Files from EnergyPlus 8.9 onwards declare a sixth standard item (annual).
+ANNUAL_ITEM_MIN_VERSION = (8, 9, 0)
+
 
 def get_eso_file_version(raw_version):
-    """Return eso file version as an integer (i.e.: 860, 890)."""
-    version = raw_version.strip()
-    start = version.index(" ")
-    return int(version[(start + 1) : (start + 6)].replace(".", ""))
+    """Return eso file version as a (major, minor, patch) tuple (i.e.: (8, 9, 0), (25, 2, 0)).
+
+    A tuple compares correctly across one- and two-digit major versions,
+    which a concatenated integer does not ('25.2.0' -> 252 < 890).
+    """
+    match = VERSION_PATTERN.search(raw_version)
+    if match is None:
+        raise InvalidLineSyntax("Cannot parse EnergyPlus version: '{}'!".format(raw_version))
+    return tuple(int(part) for part in match.groups())
 
 
 def get_eso_file_timestamp(timestamp):
@@ -314,7 +325,7 @@ def read_file(file):
     """Read raw EnergyPlus output file."""
     # process first few standard lines, ignore timestamp
     version, _ = process_statement_line(next(file))
-    last_standard_item_id = 6 if version >= 890 else 5
+    last_standard_item_id = 6 if version >= ANNUAL_ITEM_MIN_VERSION else 5
 
     # Skip standard reporting frequencies
     for _ in range(last_standard_item_id):
