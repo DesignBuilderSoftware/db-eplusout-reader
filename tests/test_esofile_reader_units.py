@@ -32,8 +32,22 @@ _STATEMENT = "Program Version,EnergyPlus, Version 9.2.0-921312fa1d, YMD=2020.11.
 
 
 class TestStatementLine:
-    def test_get_eso_file_version(self):
-        assert get_eso_file_version(" Version 9.2.0-921312fa1d") == 920
+    @pytest.mark.parametrize(
+        "raw_version, expected",
+        [
+            (" Version 8.6.0-198c6a3cff", (8, 6, 0)),
+            (" Version 9.2.0-921312fa1d", (9, 2, 0)),
+            (" Version 23.1.0-87ed9199d4", (23, 1, 0)),
+            (" Version 25.2.0-cf7368216c", (25, 2, 0)),
+            (" Version 26.2.0-4bd7a1f26f", (26, 2, 0)),
+        ],
+    )
+    def test_get_eso_file_version(self, raw_version, expected):
+        assert get_eso_file_version(raw_version) == expected
+
+    def test_two_digit_major_sorts_after_single_digit(self):
+        assert get_eso_file_version(" Version 23.1.0-87ed9199d4") > (8, 9, 0)
+        assert get_eso_file_version(" Version 8.6.0-198c6a3cff") < (8, 9, 0)
 
     def test_get_eso_file_timestamp(self):
         timestamp = get_eso_file_timestamp(" YMD=2020.11.10 11:31")
@@ -41,7 +55,7 @@ class TestStatementLine:
 
     def test_process_statement_line(self):
         version, timestamp = process_statement_line(_STATEMENT)
-        assert version == 920
+        assert version == (9, 2, 0)
         assert timestamp == datetime(2020, 11, 10, 11, 31)
 
 
