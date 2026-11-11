@@ -194,3 +194,20 @@ class TestGetResultsEsoPathDispatch:
 class TestValidateTime:
     def test_validate_time_no_boundaries(self, single_env_eso_file):
         assert single_env_eso_file._validate_time(datetime(2019, 1, 1), None, None) is True
+
+
+class TestTwoDigitMajorVersion:
+    """Regression for issue #32: EnergyPlus 10.0+ version strings were mis-parsed."""
+
+    @pytest.fixture(scope="class")
+    def modern_eso_file(self, tmp_path_factory):
+        header = _HEADER.replace("Version 9.2.0-921312fa1d", "Version 25.2.0-cf7368216c")
+        path = tmp_path_factory.mktemp("modern") / "modern.eso"
+        path.write_text(header + _SINGLE_ENV_BODY)
+        return DBEsoFile.from_path(str(path))
+
+    def test_frequencies(self, modern_eso_file):
+        assert modern_eso_file.frequencies == [H, D, M, A, RP]
+
+    def test_annual_results(self, modern_eso_file):
+        assert modern_eso_file.get_results(_VARIABLE, A).first_array == [23.5]
