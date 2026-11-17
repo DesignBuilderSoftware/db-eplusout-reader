@@ -29,7 +29,7 @@ def main() -> None:
             continue
         stem = out_dir.name
         for ext in (".eso", ".sql"):
-            # eppy may append 'out' to the prefix (legacy suffix style)
+            # The legacy suffix style names the files <prefix>out.eso / .sql.
             src = out_dir / (stem + ext)
             if not src.exists():
                 src = out_dir / (stem + "out" + ext)

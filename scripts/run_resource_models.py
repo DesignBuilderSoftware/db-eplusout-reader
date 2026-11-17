@@ -1,14 +1,15 @@
-"""Run all IDF files in the resources folder using eppy + the bundled Chicago EPW.
+"""Run all IDF files in the resources folder with the bundled Chicago EPW.
 
-The EnergyPlus installation is resolved from the ``Version`` object inside each IDF.
-Output files are written to ``resources/output/<stem>/``.
+Each IDF runs with the EnergyPlus installation that matches the ``Version``
+object inside it (``C:/EnergyPlusV<major>-<minor>-*``), by calling that
+installation's ``energyplus`` executable directly. Output files are written to
+``resources/output/<stem>/`` and the ``.eso`` and ``.sql`` results are then
+copied to ``tests/test_files/<stem>.eso`` / ``.sql``.
 
-Simulations are grouped by EnergyPlus version and run in parallel within each group
-via eppy's ``runIDFs()`` (one worker per logical CPU).  Grouping is required because
-eppy stores the active IDD as a class-level attribute; a single process can only hold
-one IDD at a time.
+Simulations run in parallel, one EnergyPlus process per logical CPU. Each
+installation reads its own ``Energy+.idd``, so IDFs for different versions can
+run side by side.
 
-Run both scripts to compare simulation times:
     uv run python scripts/run_resource_models.py
 """
 
@@ -17,13 +18,11 @@ from __future__ import annotations
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
-from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-
-from eppy.modeleditor import IDF, IDDResetError
-from eppy.runner.run_functions import EnergyPlusRunError, runIDFs
 
 RESOURCES = Path(__file__).parent.parent / "resources"
 WEATHER = RESOURCES / "USA_IL_Chicago-OHare.Intl.AP.725300_TMY3.epw"
@@ -49,6 +48,41 @@ def find_energyplus_dir(idf_path: Path) -> Path | None:
     return candidates[0] if candidates else None
 
 
+def energyplus_command(ep_dir: Path, idf_path: Path, out_dir: Path) -> list[str]:
+    """The command line that runs one IDF with one EnergyPlus installation."""
+    command = [
+        str(ep_dir / "energyplus"),
+        "--weather",
+        str(WEATHER),
+        "--output-directory",
+        str(out_dir),
+        "--output-prefix",
+        idf_path.stem,
+    ]
+    if "hvactemplate:" in idf_path.read_text(encoding="utf-8", errors="replace").lower():
+        command.append("--expandobjects")
+    command.append(str(idf_path))
+    return command
+
+
+def run_one(ep_dir: Path, idf_path: Path) -> tuple[Path, float, str | None]:
+    """Run one simulation; return the IDF, its run time and an error or None."""
+    out_dir = OUTPUT_ROOT / idf_path.stem
+    out_dir.mkdir(parents=True, exist_ok=True)
+    t0 = time.perf_counter()
+    result = subprocess.run(
+        energyplus_command(ep_dir, idf_path, out_dir),
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    elapsed = time.perf_counter() - t0
+    if result.returncode != 0:
+        tail = (result.stderr or result.stdout).strip().splitlines()[-3:]
+        return idf_path, elapsed, f"exit code {result.returncode}: " + " | ".join(tail)
+    return idf_path, elapsed, None
+
+
 def copy_outputs_to_test_files(idf_files: list[Path]) -> None:
     """Copy .eso and .sql outputs to tests/test_files/ using the IDF stem as name."""
     TEST_FILES.mkdir(parents=True, exist_ok=True)
@@ -57,103 +91,81 @@ def copy_outputs_to_test_files(idf_files: list[Path]) -> None:
         stem = idf_path.stem  # e.g. "231_1ZoneUncontrolled"
         out_dir = OUTPUT_ROOT / stem
         for ext in (".eso", ".sql"):
-            src = out_dir / (stem + ext)
-            if src.exists():
-                shutil.copy2(src, TEST_FILES / src.name)
-                copied += 1
+            # The legacy suffix style names the files <prefix>out.eso / .sql.
+            for src in (out_dir / (stem + ext), out_dir / (stem + "out" + ext)):
+                if src.exists():
+                    shutil.copy2(src, TEST_FILES / (stem + ext))
+                    copied += 1
+                    break
     print(f"  Copied {copied} file(s) to {TEST_FILES}")
 
 
-def reset_idd() -> None:
-    """Reset eppy's class-level IDD state between version groups."""
-    try:
-        IDF.resetidd()
-    except IDDResetError:
-        pass  # resetidd() always raises this after clearing state
-
-
-def main() -> None:  # pylint: disable=too-many-locals, too-many-statements
-    """Run every IDF in resources/, grouped by EnergyPlus version, and report timings."""
-    idf_files = sorted(RESOURCES.glob("*.idf"))
-    if not idf_files:
-        print("No IDF files found in resources/")
-        sys.exit(1)
-
-    OUTPUT_ROOT.mkdir(parents=True, exist_ok=True)
-
-    # Group jobs by EnergyPlus directory (one IDD per group).
-    groups: dict[Path, list[tuple[Path, dict]]] = defaultdict(list)
+def collect_jobs(idf_files: list[Path]) -> tuple[list[tuple[Path, Path]], list[str]]:
+    """Pair each IDF with its EnergyPlus installation; list the IDFs with none."""
+    jobs: list[tuple[Path, Path]] = []
     skipped: list[str] = []
-
     for idf_path in idf_files:
         ep_dir = find_energyplus_dir(idf_path)
         if ep_dir is None:
             print(f"[SKIP] {idf_path.name}  (no EnergyPlus installation found)")
             skipped.append(idf_path.name)
-            continue
-        out_dir = OUTPUT_ROOT / idf_path.stem
-        out_dir.mkdir(parents=True, exist_ok=True)
-        # Do NOT include 'weather' here: prepare_run() already passes idf.epw
-        # as a positional argument to run(), so adding it again causes
-        # "multiple values for argument 'weather'".
-        kwargs = {
-            "output_directory": str(out_dir),
-            "output_prefix": idf_path.stem,
-            "ep_version": ep_dir.name.replace("EnergyPlusV", ""),
-            "verbose": "q",
-        }
-        groups[ep_dir].append((idf_path, kwargs))
+        else:
+            jobs.append((ep_dir, idf_path))
+    return jobs, skipped
 
-    if not groups:
+
+def run_jobs(jobs: list[tuple[Path, Path]]) -> list[str]:
+    """Run the simulations in parallel; return the names of the IDFs that failed."""
+    failed: list[str] = []
+    with ThreadPoolExecutor(max_workers=os.cpu_count()) as pool:
+        for idf_path, elapsed, error in pool.map(lambda job: run_one(*job), jobs):
+            if error is None:
+                print(f"  [OK]   {idf_path.name}  {elapsed:.1f}s")
+            else:
+                print(f"  [FAIL] {idf_path.name}  {error}")
+                failed.append(idf_path.name)
+    return failed
+
+
+def print_summary(run: int, failed: list[str], skipped: list[str], seconds: float) -> None:
+    """Print how many simulations ran, failed and were skipped, and the wall time."""
+    print("=" * 50)
+    print(f"  Simulations run : {run}")
+    for label, names in (("Failed", failed), ("Skipped", skipped)):
+        if names:
+            print(f"  {label:<16}: {len(names)}")
+            for name in names:
+                print(f"    - {name}")
+    print(f"  Wall-clock time : {seconds:.1f}s")
+    print("=" * 50)
+
+
+def main() -> None:
+    """Run every IDF in resources/ with its EnergyPlus version and report timings."""
+    idf_files = sorted(RESOURCES.glob("*.idf"))
+    if not idf_files:
+        print("No IDF files found in resources/")
+        sys.exit(1)
+
+    jobs, skipped = collect_jobs(idf_files)
+    if not jobs:
         print("Nothing to run.")
         sys.exit(1)
 
-    total_jobs = sum(len(v) for v in groups.values())
-    print(f"Running {total_jobs} simulations across {len(groups)} EnergyPlus version(s)")
+    versions = sorted({ep_dir.name for ep_dir, _ in jobs})
+    print(f"Running {len(jobs)} simulations with {', '.join(versions)}")
     print(f"using {os.cpu_count()} CPUs …\n")
 
-    # runIDFs creates/removes a 'multi_runs/' dir relative to cwd.
-    original_cwd = os.getcwd()
-    os.chdir(OUTPUT_ROOT)
-
     wall_start = time.perf_counter()
-    try:
-        for ep_dir, jobs_for_version in groups.items():
-            reset_idd()
-            IDF.setiddname(str(ep_dir / "Energy+.idd"), testing=True)
-
-            ep_label = ep_dir.name
-            print(f"[{ep_label}]  {len(jobs_for_version)} simulation(s)")
-
-            idf_jobs: list[tuple[IDF, dict]] = []
-            for idf_path, kwargs in jobs_for_version:
-                idf_jobs.append((IDF(str(idf_path), str(WEATHER)), kwargs))
-
-            t0 = time.perf_counter()
-            try:
-                runIDFs(idf_jobs, processors=0)  # processors=0 → use all CPUs
-            except EnergyPlusRunError as exc:
-                print(f"  WARNING: one or more simulations failed: {exc}")
-            elapsed = time.perf_counter() - t0
-
-            print(f"  done in {elapsed:.1f}s\n")
-    finally:
-        os.chdir(original_cwd)
-
+    failed = run_jobs(jobs)
     wall_elapsed = time.perf_counter() - wall_start
 
-    ran_idf_files = [idf_path for jobs in groups.values() for idf_path, _ in jobs]
-    print("Copying outputs to tests/test_files/ …")
-    copy_outputs_to_test_files(ran_idf_files)
+    print("\nCopying outputs to tests/test_files/ …")
+    copy_outputs_to_test_files([idf_path for _, idf_path in jobs])
 
-    print("=" * 50)
-    print(f"  Simulations run : {total_jobs}")
-    if skipped:
-        print(f"  Skipped         : {len(skipped)}")
-        for name in skipped:
-            print(f"    - {name}")
-    print(f"  Wall-clock time : {wall_elapsed:.1f}s")
-    print("=" * 50)
+    print_summary(len(jobs), failed, skipped, wall_elapsed)
+    if failed:
+        sys.exit(1)
 
 
 if __name__ == "__main__":
