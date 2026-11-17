@@ -173,6 +173,27 @@ def is_leap_year_ts_to_d(raw_dates_arr):
     return False
 
 
+WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+DESIGN_DAYS = ("SummerDesignDay", "WinterDesignDay")
+
+
+def first_calendar_day(raw_dates, days_of_week):
+    """Return the first (date, day) whose day ties the date to a calendar.
+
+    EnergyPlus reports the day type, so a step on a holiday or special day
+    says 'Holiday', 'SpecialDay1', 'CustomDay2' and so on rather than its
+    weekday. Those steps are skipped. Only steps before the first year
+    boundary are used, so the date belongs to the first year of the data.
+    Returns (None, None) when there is no such step.
+    """
+    for raw_date, day in zip(raw_dates, days_of_week):
+        if check_year_increment(raw_dates[0], raw_date):
+            break
+        if day in WEEKDAYS or day in DESIGN_DAYS:
+            return raw_date, day
+    return None, None
+
+
 def seek_year(is_leap, date, day, max_year):
     """Find first year matching given criteria."""
     for year in range(max_year, 0, -1):
@@ -234,9 +255,16 @@ def convert_raw_date_data(
     if lowest_frequency in {TS, H, D}:
         lowest_frequency_values = raw_dates[lowest_frequency]
         is_leap = is_leap_year_ts_to_d(lowest_frequency_values)
-        first_date = lowest_frequency_values[0]
-        first_day = days_of_week[lowest_frequency][0]
-        if year is None:
+        first_date, first_day = first_calendar_day(
+            lowest_frequency_values, days_of_week[lowest_frequency]
+        )
+        if first_date is None:
+            # Only holidays or special days before the first year boundary:
+            # nothing ties the dates to a calendar year.
+            if year is None:
+                logging.info("No weekday in the first year, setting year to 2002.")
+                year = 2002
+        elif year is None:
             year = seek_year(is_leap, first_date, first_day, 2020)
         else:
             validate_year(year, is_leap, first_date, first_day)
