@@ -1,5 +1,6 @@
 """Parse the header and body of an EnergyPlus .eso file into raw output data."""
 
+import logging
 import re
 from collections import defaultdict, namedtuple
 from datetime import datetime
@@ -13,6 +14,8 @@ from db_eplusout_reader.exceptions import (
 )
 from db_eplusout_reader.processing.esofile_time import EsoTimestamp
 from db_eplusout_reader.processing.raw_eso_data import RawOutputData
+
+logger = logging.getLogger(__name__)
 
 ENVIRONMENT_LINE = 1
 TIMESTEP_OR_HOURLY_LINE = 2
@@ -308,8 +311,16 @@ def read_body(eso_file, highest_frequency_id, header, all_ids):
                 )
             else:
                 # current line represents a result, replace nan values from the last step
-                res = float(line[0])
-                raw_outputs.outputs[frequency][line_id][-1] = res
+                slots = raw_outputs.outputs.get(frequency, {})
+                if line_id in slots:
+                    slots[line_id][-1] = float(line[0])
+                else:
+                    # id not declared for this frequency, see issue #39
+                    logger.debug(
+                        "Skipping result line with undeclared id %s (%s).",
+                        line_id,
+                        frequency,
+                    )
 
         except ValueError:
             if "End of Data" in raw_line:

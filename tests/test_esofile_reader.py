@@ -115,3 +115,31 @@ class TestScheduleReference:
         outputs = result[0].outputs["hourly"]
         assert outputs[275] == [21.0]
         assert outputs[276] == [22.0]
+
+
+class TestUndeclaredReportId:
+    """Result lines whose id has no slot for the current frequency (issue #39)."""
+
+    def test_unknown_id_is_skipped(self, tmp_path):
+        eso = tmp_path / "unknown_id.eso"
+        body = _VALID_BODY.replace("7,20.0\n", "7,20.0\n99999,42.0\n")
+        eso.write_text(_HEADER + body)
+        result = process_eso_file(str(eso))
+        assert result[0].outputs["hourly"][7] == [20.0]
+        assert 99999 not in result[0].outputs["hourly"]
+
+    def test_id_declared_for_another_frequency_is_skipped(self, tmp_path):
+        # Id 7 is declared hourly; a copy of it after a daily step has no slot.
+        eso = tmp_path / "wrong_frequency.eso"
+        header = _HEADER + (
+            "8,7,Environment,Site Day Type Index [] !Daily "
+            "[Value,Min,Hour,Minute,Max,Hour,Minute]\n"
+        )
+        body = _VALID_BODY.replace(
+            "7,20.0\n",
+            "7,20.0\n3,1, 1, 1, 0,Tuesday\n8,3.0,3.0,1,60,3.0,1,60\n7,99.0\n",
+        )
+        eso.write_text(header + body)
+        result = process_eso_file(str(eso))
+        assert result[0].outputs["hourly"][7] == [20.0]
+        assert result[0].outputs["daily"][8] == [3.0]
