@@ -85,3 +85,25 @@ class TestSqlAcrossVersions:
         results = get_results(any_sql_path, variable, frequency=M)
         # 12 for run-period-only files; 14 when design days are included
         assert len(results.time_series) in {12, 14}
+
+
+class TestHolidayStart:
+    """EnergyPlus 26.2 file whose run period starts on a Holiday (issue #36).
+
+    Generated with EnergyPlus 26.2 from resources/262_1ZoneUncontrolledHolidayStart.idf
+    (252_1ZoneUncontrolled with a 1-7 January run period and a New Years Day
+    RunPeriodControl:SpecialDays) and the Chicago TMY3 weather file in resources/.
+    """
+
+    def test_loads_and_dates_the_run_period(self):
+        path = TEST_FILES_DIR / "262_1ZoneUncontrolledHolidayStart.eso"
+        collection = DBEsoFileCollection.from_path(str(path))
+        run_period = collection[-1]
+        results = run_period.get_results(
+            [Variable("ZONE ONE", "Zone Mean Air Temperature", "C")], H
+        )
+        first = results.time_series[0]
+        # The run period says it starts on a Tuesday (2019-01-01 is a Tuesday)
+        assert (first.month, first.day) == (1, 1)
+        assert first.strftime("%A") == "Tuesday"
+        assert len(results.time_series) == 7 * 24

@@ -10,7 +10,7 @@ monthly-only data.
 
 import pytest
 
-from db_eplusout_reader.constants import RP, A, M
+from db_eplusout_reader.constants import RP, A, H, M
 from db_eplusout_reader.exceptions import LeapYearMismatch, StartDayMismatch
 from db_eplusout_reader.processing.esofile_time import (
     EsoTimestamp,
@@ -176,3 +176,49 @@ class TestConvertRawDateDataDefaultYear:
         days_of_week = {M: ["Tuesday"]}
         dates = convert_raw_date_data(raw_dates, days_of_week, year=2015)
         assert dates[M][0].year == 2015
+
+
+class TestRunPeriodStartingOnSpecialDay:
+    """A run period whose first day is a holiday or special day (issue #36).
+
+    EnergyPlus writes the day type, so the first record can say 'Holiday'
+    rather than a weekday name; the year comes from the first real weekday.
+    """
+
+    @staticmethod
+    def _hourly(days):
+        # days: list of ((month, day), day_type), 24 hourly records each
+        dates, day_types = [], []
+        for (month, day), day_type in days:
+            for hour in range(1, 25):
+                dates.append(EsoTimestamp(month, day, hour, 60))
+                day_types.append(day_type)
+        return {H: dates}, {H: day_types}
+
+    def test_holiday_start_finds_year_from_next_weekday(self):
+        # 2019-01-01 is a Tuesday (the holiday), 2019-01-02 a Wednesday
+        raw_dates, days = self._hourly([((1, 1), "Holiday"), ((1, 2), "Wednesday")])
+        dates = convert_raw_date_data(raw_dates, days, year=None)
+        assert dates[H][0].year == 2019
+
+    def test_special_days_in_a_row_are_skipped(self):
+        raw_dates, days = self._hourly(
+            [((1, 1), "Holiday"), ((1, 2), "SpecialDay1"), ((1, 3), "Thursday")]
+        )
+        dates = convert_raw_date_data(raw_dates, days, year=None)
+        assert dates[H][0].year == 2019
+
+    def test_holiday_start_with_explicit_year_passes(self):
+        raw_dates, days = self._hourly([((1, 1), "Holiday"), ((1, 2), "Wednesday")])
+        dates = convert_raw_date_data(raw_dates, days, year=2019)
+        assert dates[H][0].year == 2019
+
+    def test_holiday_start_with_wrong_explicit_year_still_raises(self):
+        raw_dates, days = self._hourly([((1, 1), "Holiday"), ((1, 2), "Wednesday")])
+        with pytest.raises(StartDayMismatch):
+            convert_raw_date_data(raw_dates, days, year=2018)
+
+    def test_only_special_days_defaults_to_2002(self):
+        raw_dates, days = self._hourly([((1, 1), "Holiday")])
+        dates = convert_raw_date_data(raw_dates, days, year=None)
+        assert dates[H][0].year == 2002
